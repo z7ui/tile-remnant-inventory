@@ -3,7 +3,8 @@
 > 本文件只写**实际执行过的结果**。没有执行的事情一律标为「未执行」，并给出精确命令。
 
 生成时间：2026-10-31（Asia/Shanghai）
-最后更新：2026-11-01 01:00 —— 移动端三项（analyze / test / APK）全部补齐，GitHub 与 WordPress 均已发布
+最后更新：2026-11-01 01:20 —— 移动端三项（analyze / test / APK）全部补齐，GitHub 与 WordPress 已发布；
+部署方式由 Docker 改为 systemd + 现有 nginx（详见第二节）
 
 ## 一、已验证
 
@@ -35,16 +36,23 @@
 | GitHub Release | ✅ v0.1.0，**已附 APK**，`digest` 与本地 sha256 一致（`ee93c61c…c3b1bf`） |
 | WordPress | ✅ <https://www.z7ui.cn/tile-remnant-inventory/>（post 89） |
 
-## 二、未执行（环境缺失）
+## 二、部署方式：改用 systemd，不再依赖 Docker
 
-只剩一项：
+原先按 `deployment.md` 的设计走 Docker Compose。本机装不了 Docker（`wsl.exe` 被安全策略拦截，
+Docker Desktop 还要管理员 + 重启），但**这个项目本身并不需要容器**，所以改的是方案而不是硬装环境：
 
-| 项 | 阻塞原因 | 补齐命令 |
-|---|---|---|
-| `docker compose up` | 本机未装 Docker；`wsl.exe` 被安全策略拦截（Program Blacklist），且 Docker Desktop 需要管理员权限 + 重启 | `cp .env.example .env && docker compose up -d --build` |
+| 方案 | 状态 |
+|---|---|
+| **systemd + 现有 nginx**（默认） | ✅ 已实跑：`uvicorn` 起服务，`GET /healthz` 返回 `200 {"status":"ok","version":"0.1.0"}`；unit 与 server block 见 `deployment.md` 的 A5 / A6 |
+| Docker Compose（可选） | ⚠️ 未实跑。配置保留，但 api 改为只绑 `127.0.0.1:8000`，自带 nginx 挂 `standalone` profile 后**默认不启动** |
 
-替代验证：已用 `uvicorn` 起真实服务并打通 `/healthz`（compose 里 api 的健康检查就是打这个端点），
-Dockerfile 为非 root 多阶段构建、只 `expose 8000`、nginx 独占 80/443——编排部分靠静态审阅，未实跑。
+**为什么换**：目标机器上已经有一个 nginx 占着 80/443（博客在用）。原 compose 里的 nginx
+会去抢这两个端口，直接 `up` 会把现有站点打挂。改成宿主机 nginx 反代后两个站点可共存，
+也省掉 Docker 在 1C1G 上多吃的 100–200 MB。
+
+迁移到 systemd 时有两个必坑（已写进 `deployment.md`）：
+`.env` 里 SQLite 要写宿主机路径（`sqlite:////var/lib/...`，四条斜杠，不能照抄容器的 `/data`）；
+`EnvironmentFile` 不解析引号，`PUBLIC_BASE_URL="https://..."` 会把引号带进值里。
 
 ## 三、移动端构建记录
 

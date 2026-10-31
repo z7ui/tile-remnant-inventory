@@ -17,11 +17,12 @@ services:
       ENVIRONMENT: ${ENVIRONMENT:-production}
     volumes:
       - tile_data:/data
-    expose:
-      - "8000"
+    # 只绑本地回环，由宿主机上现成的 nginx 反代进来（见 docs/deployment.md）。
+    # 这样不会去抢宿主机的 80/443，同一台机器上的其它站点（比如博客）可以共存。
+    ports:
+      - "127.0.0.1:8000:8000"
     networks:
       - edge
-    # The API is never published to the host: only nginx can reach it.
     healthcheck:
       test:
         [
@@ -39,6 +40,11 @@ services:
     image: nginx:1.27-alpine
     container_name: tile-nginx
     restart: unless-stopped
+    # 默认不启动。要抢 80/443 只能有一个主人：机器上已经有 nginx 时（比如还跑着博客）
+    # 就让宿主机那份直接反代 127.0.0.1:8000，别开这个服务。
+    # 只有从零开始的干净机器、想整套容器化时才用：
+    #   docker compose --profile standalone up -d
+    profiles: ["standalone"]
     depends_on:
       api:
         condition: service_started

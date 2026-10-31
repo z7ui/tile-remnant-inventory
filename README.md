@@ -4,8 +4,8 @@
 
 - 移动端：Flutter（Android APK，不上架应用商店）
 - 后端：Python FastAPI + SQLAlchemy 2 + Alembic
-- 数据库：SQLite（WAL，默认）或 PostgreSQL（`docker compose --profile postgres`）
-- 部署：Docker Compose + Nginx + HTTPS
+- 数据库：SQLite（WAL，默认）或 PostgreSQL（可选：换 `DATABASE_URL` 并装 `requirements-postgres.txt`）
+- 部署：systemd + 现有 nginx（也提供整套 Docker Compose，见第九节）
 - 许可证：GPL-3.0
 
 > 当前版本 **v0.1.0**。后端 104 个 pytest 用例全部通过；移动端已用 Flutter 3.47.9 + JDK 17 实际跑通 `pub get` / `analyze`（0 error）/ `test`（14 passed），并构建出 release APK。
@@ -24,7 +24,7 @@
 - [六、L 形余料规则](#六l-形余料规则)
 - [七、API 一览](#七api-一览)
 - [八、本地开发与测试](#八本地开发与测试)
-- [九、部署（Docker + Nginx + HTTPS）](#九部署docker--nginx--https)
+- [九、部署（systemd + 现有 nginx）](#九部署systemd--现有-nginx)
 - [十、构建 APK](#十构建-apk)
 - [十一、备份与恢复](#十一备份与恢复)
 - [十二、安全说明](#十二安全说明)
@@ -233,22 +233,35 @@ python -m pytest -q
 
 覆盖点：cm/mm 解析、旋转、覆盖校验、L 形几何、余料面积守恒、异形入库/丢弃、三种切割结果、多片扣减、多批次拆分、幂等、并发不超扣、项目名唯一、越权 403、邀请码撤销/重置、软删除、CSV 导出、溯源链。
 
-## 九、部署（Docker + Nginx + HTTPS）
+## 九、部署（systemd + 现有 nginx）
+
+这台机器上通常已经有一个 nginx 占着 80/443（比如还跑着博客），所以默认**不再套一层容器**：
 
 ```bash
-cp .env.example .env
-# 必改：PUBLIC_BASE_URL=https://你的域名  DATABASE_URL  POSTGRES_PASSWORD
-mkdir -p deploy/certs
-# 放入 fullchain.pem / privkey.pem（或先用 acme.sh webroot 签发）
-sed -i 's/tiles.example.com/你的域名/g' deploy/nginx/tile-api.conf
-docker compose up -d --build
-docker compose logs -f api
+# 1. 代码与依赖
+git clone https://github.com/z7ui/tile-remnant-inventory.git /opt/tile/app
+python3 -m venv /opt/tile/venv
+/opt/tile/venv/bin/pip install -r /opt/tile/app/backend/requirements.txt
+
+# 2. 配置（SQLite 用宿主机路径：四条斜杠，值是绝对路径）
+cp .env.example .env && chmod 600 .env
+#   PUBLIC_BASE_URL=https://tiles.example.com
+#   DATABASE_URL=sqlite:////var/lib/tile/tile_remnant.db
+
+# 3. 迁移（systemd 不会自动跑，必须手动执行一次）
+cd backend && /opt/tile/venv/bin/alembic upgrade head
+
+# 4. 起服务（只监听 127.0.0.1:8000）
+systemctl enable --now tile-api
+
+# 5. nginx 反代到 127.0.0.1:8000
+nginx -t && systemctl reload nginx
 ```
 
-- API 只监听容器内 `8000`，**不映射到宿主机**；对外只有 Nginx 的 80/443。
-- Nginx：HTTP→HTTPS 301、TLS1.2/1.3、HSTS、`X-Content-Type-Options`、请求体 1MB 上限、读写分离限流。
-- 启动时 `docker-entrypoint.sh` 自动执行 `alembic upgrade head`。
-- PostgreSQL 可选：`docker compose --profile postgres up -d`，并把 `DATABASE_URL` 改为 `postgresql+psycopg://tile:密码@db:5432/tile`；数据库同样不暴露端口。
+- API 只绑本地回环：`ss -lntp | grep 8000` 应看到 `127.0.0.1:8000`，出现 `0.0.0.0` 就是暴露公网了
+- systemd unit 与 nginx server block 的完整内容见 [`docs/deployment.md`](docs/deployment.md) 的 A5 / A6
+- **Docker 仍保留为可选项**：`docker compose up -d` 只起 api（绑 `127.0.0.1:8000`），
+  自带 nginx 挂在 `standalone` profile 下默认不启动，不会去抢 80/443
 
 细节与排错见 [`docs/deployment.md`](docs/deployment.md)。
 
@@ -350,7 +363,7 @@ bash scripts/restore.sh backups/20261031-2100/tile_remnant.db
 | Flutter 源码（10 个页面 + 图示组件） | ✅ 完整提交 |
 | Flutter `analyze` / `test` | ✅ `analyze` **0 error / 0 warning**；`test` **14 passed**（修了 5 个真实 bug：3 处漏 import、`post()` 缺参数、`formatArea` 阈值与 `parseLengthToMm` 吞空格） |
 | APK 构建 | ✅ `app-release.apk` **36.5 MB**（Flutter 3.47.9 + JDK 17 + Gradle 8.14.3，debug 签名） |
-| Docker Compose / Nginx 配置 | ⚠️ **未实跑**：本机无 Docker，`wsl.exe` 被安全策略拦截。已用 `uvicorn` 起真实服务验证 `/healthz` 返回 200（compose 的健康检查就是这条） |
+| 部署方式 | ✅ **systemd + 现有 nginx**（不再需要 Docker，理由见第九节）。已用 `uvicorn` 实跑验证 `/healthz` 返回 200；compose 保留为可选，自带 nginx 挂 `standalone` profile 默认不启动，不会抢 80/443 |
 | GitHub 仓库 / Release | ✅ <https://github.com/z7ui/tile-remnant-inventory>（PUBLIC），Release v0.1.0 **已附 APK**，digest 与本地一致 |
 | WordPress 博客 | ✅ <https://www.z7ui.cn/tile-remnant-inventory/>（post 89） |
 

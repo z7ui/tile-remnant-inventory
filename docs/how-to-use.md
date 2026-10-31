@@ -165,18 +165,40 @@ storeFile=/absolute/path/to/upload-keystore.jks
 
 ## 四、部署到自己的服务器
 
+默认方案是 **systemd + 复用宿主机已有的 nginx**，不需要 Docker（理由见下）：
+
 ```bash
+# 1. 代码 + 独立 venv
+git clone https://github.com/z7ui/tile-remnant-inventory.git /opt/tile/app
+python3 -m venv /opt/tile/venv
+/opt/tile/venv/bin/pip install -r /opt/tile/app/backend/requirements.txt
+
+# 2. .env（SQLite 要写宿主机路径，四条斜杠）
 cp .env.example .env
-# 必改：PUBLIC_BASE_URL=https://你的域名、DATABASE_URL、POSTGRES_PASSWORD（用 pg 时）
-docker compose up -d --build
+#   PUBLIC_BASE_URL=https://tiles.example.com
+#   DATABASE_URL=sqlite:////var/lib/tile/tile_remnant.db
+#   注意：值不要加引号，systemd 会把引号当值的一部分
+
+# 3. 迁移（systemd 不自动跑，必须手动一次）
+cd /opt/tile/app/backend && /opt/tile/venv/bin/alembic upgrade head
+
+# 4. 起服务（只监听 127.0.0.1:8000）
+systemctl enable --now tile-api
+
+# 5. nginx 加一个 server block 反代，然后 reload
+nginx -t && systemctl reload nginx
 ```
 
-- 只暴露 nginx 的 80/443，**API 和数据库都不映射到宿主机**；
-- 证书放 `deploy/certs/`（`fullchain.pem` + `privkey.pem`）；
-- 要 PostgreSQL：`docker compose --profile postgres up -d`，再把 `DATABASE_URL` 换成 `postgresql+psycopg://...`；
-- 健康检查打的是 `/healthz`，返回 `{"status":"ok"}` 才算起来了。
+- API **只绑 127.0.0.1**，外部一律走 nginx；`ss -lntp | grep 8000` 出现 `0.0.0.0` 就是配错了
+- 证书直接用宿主机现成的那份（certbot / acme.sh 都行），不用再签
+- 健康检查打 `/healthz`，返回 `{"status":"ok"}` 才算起来了
+- 想用 PostgreSQL / 想整套容器化，见 `deployment.md` 的 B 节（Docker 是可选项）
 
-详细步骤见 [`docs/deployment.md`](deployment.md)。
+**为什么不用 Docker**：目标机器上通常已经有一个 nginx 占着 80/443（博客之类）。
+compose 里那套 nginx 会去抢端口，直接 `up` 会把现有站点打挂；而这个项目只是一个
+uvicorn 进程 + 一个 SQLite 文件，为它再套一层容器不划算，1C1G 的机器上 Docker 自身还要多吃 100–200 MB。
+
+完整 unit、nginx 配置、升级与回滚步骤见 [`docs/deployment.md`](deployment.md)。
 
 ---
 
