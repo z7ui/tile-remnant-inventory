@@ -1,0 +1,2 @@
+# PostgreSQL driver — only needed when DATABASE_URL starts with postgresql+psycopg://
+psycopg[binary]>=3.2
