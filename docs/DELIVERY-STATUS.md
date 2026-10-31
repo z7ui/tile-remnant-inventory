@@ -3,8 +3,8 @@
 > 本文件只写**实际执行过的结果**。没有执行的事情一律标为「未执行」，并给出精确命令。
 
 生成时间：2026-10-31（Asia/Shanghai）
-最后更新：2026-11-01 01:20 —— 移动端三项（analyze / test / APK）全部补齐，GitHub 与 WordPress 已发布；
-部署方式由 Docker 改为 systemd + 现有 nginx（详见第二节）
+最后更新：2026-11-01 01:35 —— 后端已部署上线（<https://www.z7ui.cn/tile-api>）；
+APK 升到 v0.1.1，服务器地址写死进安装包
 
 ## 一、已验证
 
@@ -19,22 +19,35 @@
 | 迁移 | `alembic revision --autogenerate` / `upgrade head` | ✅ 9 张表 + `alembic_version` |
 | 图标生成 | `python mobile/tool/generate_icons.py` | ✅ 5 个尺寸 PNG |
 
-### 1.2 移动端（本次补齐）
+### 1.2 移动端
 
 | 项 | 命令 | 结果 |
 |---|---|---|
 | 依赖解析 | `flutter pub get` | ✅ 74 个依赖 |
 | 静态分析 | `flutter analyze` | ✅ **0 error / 0 warning**（54 条 info 是 `withOpacity` 弃用、`prefer_const` 之类的建议） |
 | 单元/组件测试 | `flutter test` | ✅ **14 passed** |
-| 构建 APK | `flutter build apk --release` | ✅ `app-release.apk` **36.5 MB**，用时 1209 s |
+| 构建 APK | `flutter build apk --release` | ✅ v0.1.1，**36.5 MB**（v0.1.0 首次构建 1209 s，v0.1.1 增量 66 s） |
 
 ### 1.3 发布
 
 | 项 | 结果 |
 |---|---|
 | GitHub 仓库 | ✅ <https://github.com/z7ui/tile-remnant-inventory>（PUBLIC） |
-| GitHub Release | ✅ v0.1.0，**已附 APK**，`digest` 与本地 sha256 一致（`ee93c61c…c3b1bf`） |
+| GitHub Release | ✅ **v0.1.1**，附 APK，`digest` 与本地 sha256 一致（`30a15b6c…babae`）。v0.1.0 的 APK 已撤下——那个包内置的是 `tiles.example.com`，连不上任何后端 |
 | WordPress | ✅ <https://www.z7ui.cn/tile-remnant-inventory/>（post 89） |
+
+### 1.4 生产部署（真实运行）
+
+| 项 | 值 |
+|---|---|
+| API 地址 | <https://www.z7ui.cn/tile-api> |
+| 健康检查 | `GET /tile-api/healthz` → `200 {"status":"ok","version":"0.1.1"}` |
+| 鉴权 | 未认证 `GET /tile-api/api/projects` → `401` |
+| 运行方式 | systemd `tile-api.service`（User=tile），只监听 `127.0.0.1:8000` |
+| 反向代理 | 宿主机 nginx，`location /tile-api/` → `proxy_pass http://127.0.0.1:8000/`（原配置备份为 `z7ui.cn.bak.20261101`） |
+| 代码位置 | `/opt/tile/backend`，venv 在 `/opt/tile/venv` |
+| 数据 | `/var/lib/tile/tile_remnant.db`（SQLite，owner tile） |
+| 博客可用性 | 部署后首页与文章页均 200，未受影响 |
 
 ## 二、部署方式：改用 systemd，不再依赖 Docker
 
@@ -43,7 +56,7 @@ Docker Desktop 还要管理员 + 重启），但**这个项目本身并不需要
 
 | 方案 | 状态 |
 |---|---|
-| **systemd + 现有 nginx**（默认） | ✅ 已实跑：`uvicorn` 起服务，`GET /healthz` 返回 `200 {"status":"ok","version":"0.1.0"}`；unit 与 server block 见 `deployment.md` 的 A5 / A6 |
+| **systemd + 现有 nginx**（默认） | ✅ **已上线**：<https://www.z7ui.cn/tile-api>，细节见 1.4 |
 | Docker Compose（可选） | ⚠️ 未实跑。配置保留，但 api 改为只绑 `127.0.0.1:8000`，自带 nginx 挂 `standalone` profile 后**默认不启动** |
 
 **为什么换**：目标机器上已经有一个 nginx 占着 80/443（博客在用）。原 compose 里的 nginx

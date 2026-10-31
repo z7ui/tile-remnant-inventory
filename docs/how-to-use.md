@@ -19,7 +19,18 @@
 
 App 不注册账号，第一次启动会**自己注册这台设备**（设备 ID + 密钥，密钥只发一次，存在手机的安全存储里）。
 
-服务器地址是**打包时注入**的（`--dart-define=API_BASE_URL=...`）。要换服务器：项目列表页右上角「更换服务器？」。
+服务器地址**写死在安装包里**，界面上没有地方改：
+
+```
+https://www.z7ui.cn/tile-api
+```
+
+- release 包锁定：项目列表页没有「服务器设置」图标，加入项目页的服务器只读，启动失败页也不给改
+- 想换服务器只能换安装包（重新 `--dart-define=API_BASE_URL=...` 构建）
+- debug 构建仍可改，方便连本机调试
+
+> **为什么不让改**：设备身份（设备 ID + 密钥）是发给「服务器」的。地址如果能在界面上随便填，
+> 就等于留了一条把设备密钥骗到别人服务器的路。地址跟安装包绑定，换地址 = 换包。
 
 ### 1.3 建项目，或者加入别人的
 
@@ -121,10 +132,12 @@ cd backend && python -m pytest -q      # 104 passed
 # 1. 指定 JDK（Flutter 有自己的一份 jdk 配置，光设 JAVA_HOME 不管用）
 flutter config --jdk-dir="D:\flutte\jdk-17.0.20.1+1"
 
-# 2. 构建（API_BASE_URL 换成你自己后端的地址）
+# 2. 构建（API_BASE_URL 就是这个包连的服务器，写进去就改不了）
+#    本项目 AGP 8.5.2 低于 Flutter 3.47 的要求，所以要带 skip 开关
 cd mobile
 flutter build apk --release \
-  --dart-define=API_BASE_URL=https://你的域名 \
+  --android-skip-build-dependency-validation \
+  --dart-define=API_BASE_URL=https://www.z7ui.cn/tile-api \
   --target-platform android-arm64
 
 # 3. 产物

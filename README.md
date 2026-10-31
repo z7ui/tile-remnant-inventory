@@ -8,7 +8,9 @@
 - 部署：systemd + 现有 nginx（也提供整套 Docker Compose，见第九节）
 - 许可证：GPL-3.0
 
-> 当前版本 **v0.1.0**。后端 104 个 pytest 用例全部通过；移动端已用 Flutter 3.47.9 + JDK 17 实际跑通 `pub get` / `analyze`（0 error）/ `test`（14 passed），并构建出 release APK。
+> 当前版本 **v0.1.1**。后端 104 个 pytest 用例全部通过，已部署在 <https://www.z7ui.cn/tile-api>；
+> 移动端用 Flutter 3.47.9 + JDK 17 跑通 `pub get` / `analyze`（0 error）/ `test`（14 passed），
+> release APK 把服务器地址**写死进安装包**（运行时改不了）。
 >
 > **只想用，不想看代码？** → [`docs/how-to-use.md`](docs/how-to-use.md)（装包、建项目、入库、匹配、切割、溯源，以及构建与部署的坑）
 
@@ -235,6 +237,11 @@ python -m pytest -q
 
 ## 九、部署（systemd + 现有 nginx）
 
+> **本次实际部署**：<https://www.z7ui.cn/tile-api>
+> —— systemd `tile-api.service`（User=tile，只监听 `127.0.0.1:8000`）+ 宿主机 nginx
+> `location /tile-api/`；`GET /tile-api/healthz` 返回 `200 {"status":"ok","version":"0.1.1"}`。
+> 下面是可以照抄的通用步骤，把域名和路径换掉即可。
+
 这台机器上通常已经有一个 nginx 占着 80/443（比如还跑着博客），所以默认**不再套一层容器**：
 
 ```bash
@@ -362,8 +369,8 @@ bash scripts/restore.sh backups/20261031-2100/tile_remnant.db
 | Alembic 初始迁移 | ✅ 已生成并实际 `upgrade head` 验证 |
 | Flutter 源码（10 个页面 + 图示组件） | ✅ 完整提交 |
 | Flutter `analyze` / `test` | ✅ `analyze` **0 error / 0 warning**；`test` **14 passed**（修了 5 个真实 bug：3 处漏 import、`post()` 缺参数、`formatArea` 阈值与 `parseLengthToMm` 吞空格） |
-| APK 构建 | ✅ `app-release.apk` **36.5 MB**（Flutter 3.47.9 + JDK 17 + Gradle 8.14.3，debug 签名） |
-| 部署方式 | ✅ **systemd + 现有 nginx**（不再需要 Docker，理由见第九节）。已用 `uvicorn` 实跑验证 `/healthz` 返回 200；compose 保留为可选，自带 nginx 挂 `standalone` profile 默认不启动，不会抢 80/443 |
+| APK 构建 | ✅ **v0.1.1**，36.5 MB（Flutter 3.47.9 + JDK 17 + Gradle 8.14.3，debug 签名）；服务器地址写死进包 |
+| 部署 | ✅ **已上线** <https://www.z7ui.cn/tile-api>：systemd + 现有 nginx（不再需要 Docker）；`/healthz` 200、未认证接口 401、博客未受影响 |
 | GitHub 仓库 / Release | ✅ <https://github.com/z7ui/tile-remnant-inventory>（PUBLIC），Release v0.1.0 **已附 APK**，digest 与本地一致 |
 | WordPress 博客 | ✅ <https://www.z7ui.cn/tile-remnant-inventory/>（post 89） |
 
