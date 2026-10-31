@@ -180,13 +180,73 @@ docker compose up -d --build
 代码是 GPL-3.0，自己部署、自己改都行：
 
 ```bash
-git clone https://github.com/z7ui/tile-remnant-inventory.git
-cd tile-remnant-inventory
-cp .env.example .env
-docker compose up -d --build
+git clone https://github.com/z7ui/tile-remnant-inventory.git /opt/tile/app
+python3 -m venv /opt/tile/venv
+/opt/tile/venv/bin/pip install -r /opt/tile/app/backend/requirements.txt
+
+cp /opt/tile/app/.env.example /opt/tile/app/.env   # 改 PUBLIC_BASE_URL 和 DATABASE_URL
+cd /opt/tile/app/backend && /opt/tile/venv/bin/alembic upgrade head
+# 然后用 systemd 起服务（只监听 127.0.0.1:8000），nginx 加一个 location 反代进来
 ```
 
+完整步骤（建用户、unit、nginx、证书、升级回滚）见仓库的 `docs/deployment.md`，Docker Compose 作为可选方案保留。
+
 后端有 104 个测试，覆盖单位解析、旋转、覆盖校验、L 形面积守恒、异形入库/丢弃、并发不超扣、越权 403、邀请码撤销。
+
+## 十二、上线之后：把服务器地址写死进安装包
+
+设计里我原本留了个「贴心」功能：App 里可以改服务器地址。理由是工地网络环境千奇百怪，
+万一 HTTPS 不通，让用户自己换一个总比装不上强。
+
+上线那天把这个功能删了。
+
+不是因为它用不上，是因为**它给了别人一条路**。这个 App 没有账号体系，设备身份
+（设备 ID + 一对密钥）是发给「服务器」的。地址如果能随便填，就等于允许把密钥发到
+任意一个地址上去——而密钥是这台设备在服务端的唯一凭证。
+
+改成什么了：
+
+- 地址在编译时写进安装包（`--dart-define=API_BASE_URL=...`），release 构建里
+  `AppConfig.serverLocked = kReleaseMode` 锁死
+- 三处入口全部隐藏：项目列表的设置图标、加入项目页的「修改」、启动失败页的「改地址」
+- `Session.setServer()` 里再抛一次异常，入口漏判时的双保险
+- 首次启动会清掉本地存的旧地址；如果它和编译值不同，连设备身份和项目列表一起清
+  （那些是旧服务器签发的，带过来只会 401）
+
+代价是换服务器只能换安装包。对「自部署」这个定位来说可以接受——自己的服务不太可能天天搬。
+
+### 部署：最后没用 Docker
+
+原本文档写的是 `docker compose up -d`，nginx、api、可选 PostgreSQL 三件套。
+真到自己机器上第一件事就卡住：这台机器已经有一个 nginx 在跑博客，占着 80/443。
+compose 里那个 nginx 服务也映射 80:80 和 443:443，`up` 下去博客当场 502。
+
+而这个项目本身是什么？一个 uvicorn 进程，一个 SQLite 文件。为它再套一层容器，
+换来的是多一份镜像、多一层网络、多 100–200MB 内存——这台机器总共 1.7G。
+
+所以变成：
+
+```
+systemd  tile-api.service (User=tile, 127.0.0.1:8000)
+   └── 宿主机 nginx: location /tile-api/ → proxy_pass http://127.0.0.1:8000/
+```
+
+Compose 保留在仓库里，降级为「全新机器想整套容器化」的可选项，并把自带的 nginx
+挂到 `standalone` profile 下——默认不启动，不会再抢端口。
+
+线上现在是这样：`GET /tile-api/healthz` → `200 {"status":"ok","version":"0.1.1"}`，
+未认证访问 `/tile-api/api/projects` → `401`。
+
+### 一个具体的数字
+
+APK 36.5 MB，arm64，minSdk 24。
+
+第一次 `flutter build apk` 跑了 1209 秒——不是编译慢，是它在自动补 NDK、SDK Platform 36、
+CMake，本机一个都没有。增量重编 66 秒。
+
+中间踩的坑比代码本身多：Flutter SDK 缺 `.git`、`dart-sdk` 只剩一个空目录（完整的那份被
+改名成 `dart-sdk.old1`）、JDK 25 和 Gradle 8.7 打架、`services.gradle.org` 连不上、
+AGP 版本低于 Flutter 的下限。全写进了 `docs/DELIVERY-STATUS.md`——不是留档，是下次别再花一晚上。
 
 装修这件事，业主在意的是效果，师傅在意的是效率。一个能把"半块砖"管起来的工具，省下的不只是材料费，还有每次翻找时的那十分钟。
 
