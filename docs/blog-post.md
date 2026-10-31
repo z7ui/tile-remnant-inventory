@@ -6,7 +6,7 @@
 
 这篇文章记录我如何把这件事做成一个能用的手机 App：**按尺寸匹配、按真实切割扣减、把余料（包括 L 形异形）继续入库，并且每一片砖都能追回原砖。**
 
-项目地址（GPL-3.0）：`https://github.com/<you>/tile-remnant-inventory`
+项目地址（GPL-3.0）：`https://github.com/z7ui/tile-remnant-inventory`
 
 ---
 
@@ -180,7 +180,7 @@ docker compose up -d --build
 代码是 GPL-3.0，自己部署、自己改都行：
 
 ```bash
-git clone https://github.com/<you>/tile-remnant-inventory.git
+git clone https://github.com/z7ui/tile-remnant-inventory.git
 cd tile-remnant-inventory
 cp .env.example .env
 docker compose up -d --build
