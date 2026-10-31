@@ -132,10 +132,11 @@ class ApiClient {
     Object? body,
     String? projectToken,
     bool withDeviceSecret = false,
+    bool withDeviceId = true,
     Map<String, String>? query,
     Duration? timeout,
   }) =>
-      request('POST', path, body: body, projectToken: projectToken, withDeviceSecret: withDeviceSecret, query: query, timeout: timeout);
+      request('POST', path, body: body, projectToken: projectToken, withDeviceSecret: withDeviceSecret, withDeviceId: withDeviceId, query: query, timeout: timeout);
 
   Future<dynamic> patch(String path, {Object? body, String? projectToken}) =>
       request('PATCH', path, body: body, projectToken: projectToken);

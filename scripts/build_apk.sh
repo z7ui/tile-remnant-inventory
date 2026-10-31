@@ -60,6 +60,18 @@ flutter analyze
 echo "==> flutter test"
 flutter test
 
+# Gradle 8.7 只支持到 JDK 21。Flutter 默认会挑 Android Studio 自带的 JDK，
+# 那可能是 25，于是直接报 "Java/Gradle incompatibility" —— 而且只设 JAVA_HOME 不生效，
+# 必须用 `flutter config --jdk-dir=`。这里提前提醒一句，省得编译到一半才发现。
+if [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+  _jv="$("$JAVA_HOME/bin/java" -version 2>&1 | head -1 | sed -E 's/.*"([0-9]+).*/\1/')"
+  if [ "${_jv:-0}" -ge 22 ] 2>/dev/null; then
+    echo "WARN: JAVA_HOME 指向 JDK $_jv，而 Gradle 8.7 只支持到 21。"
+    echo "      如果构建报 Java/Gradle incompatibility，执行下面这行后重试："
+    echo "        flutter config --jdk-dir=<JDK 17 的安装路径>"
+  fi
+fi
+
 echo "==> flutter build apk --release"
 flutter build apk --release \
   --dart-define=API_BASE_URL="$API_BASE_URL" \

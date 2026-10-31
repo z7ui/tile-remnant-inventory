@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'app_theme.dart';
-import 'formatters.dart';
-import 'models.dart';
+import '../core/app_theme.dart';
+import '../core/formatters.dart';
+import '../core/models.dart';
+import 'common.dart';
 
 /// Inventory card: shape thumbnail → original size → current size → pieces.
 class StockCard extends StatelessWidget {

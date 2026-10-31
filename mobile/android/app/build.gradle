@@ -13,7 +13,10 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.tileremnant.app"
     compileSdk = 35
-    ndkVersion = flutter.ndkVersion
+    // 本项目没有 C/C++ 源码，依赖的 .so 都是插件预编译好的，所以不必锁 NDK 版本。
+    // 保留 `ndkVersion = flutter.ndkVersion` 会让 AGP 强制下载 1GB+ 的 NDK 28.2；
+    // 若将来引入 native 代码，把它打开并先 sdkmanager "ndk;28.2.13676358"。
+    // ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -27,7 +30,7 @@ android {
     defaultConfig {
         applicationId = "com.tileremnant.app"
         // flutter_secure_storage (EncryptedSharedPreferences) needs API 23
-        minSdk = 23
+        minSdkVersion = flutter.minSdkVersion
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName

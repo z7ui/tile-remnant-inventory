@@ -3,9 +3,11 @@ import 'dart:math' as math;
 /// Parses user input like `800`, `80cm`, `800mm`, `80.5cm` into millimetres.
 /// Returns `null` when the text is not a valid positive length.
 int? parseLengthToMm(String raw, String unit) {
-  final String text = raw.trim().replaceAll(' ', '').replaceAll('，', '.');
+  // 只去掉首尾空白，不吞中间的空格：`8 0` 是手滑，不该被当成 80。
+  // 数字与单位之间的空格由正则里的 \s* 允许（`80.5 cm`）。
+  final String text = raw.trim().replaceAll('，', '.');
   if (text.isEmpty) return null;
-  final RegExpMatch? match = RegExp(r'^(\d+(?:[.,]\d+)?)(mm|cm|m)?$', caseSensitive: false).firstMatch(text);
+  final RegExpMatch? match = RegExp(r'^(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?$', caseSensitive: false).firstMatch(text);
   if (match == null) return null;
 
   final double value = double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0;
@@ -59,8 +61,10 @@ String formatSize(int widthMm, int heightMm, String unit) {
 }
 
 String formatArea(int areaMm2) {
+  // 阈值取半平方米：工地口径里 0.72 m² 就该念「0.72 平米」，
+  // 换算成 72 dm² 反而要在脑子里再除一次。只有真小的边角料（< 0.5 m²）才用 dm²。
   final double m2 = areaMm2 / 1000000;
-  if (m2 >= 1) return '${m2.toStringAsFixed(2)} m²';
+  if (m2 >= 0.5) return '${m2.toStringAsFixed(2)} m²';
   return '${(areaMm2 / 10000).toStringAsFixed(2)} dm²';
 }
 

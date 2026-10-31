@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../core/app_theme.dart';
 
 /// Full screen QR scanner. Pops with the raw payload string.
 class QrScanPage extends StatefulWidget {
