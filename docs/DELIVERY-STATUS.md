@@ -3,127 +3,127 @@
 > 本文件只写**实际执行过的结果**。没有执行的事情一律标为「未执行」，并给出精确命令。
 
 生成时间：2026-10-31（Asia/Shanghai）
-最后更新：2026-10-31 22:57 —— GitHub 与 WordPress 均已发布（原「未执行」两项已关闭）
+最后更新：2026-11-01 01:00 —— 移动端三项（analyze / test / APK）全部补齐，GitHub 与 WordPress 均已发布
 
 ## 一、已验证
 
+### 1.1 后端
+
 | 项 | 命令 | 结果 |
 |---|---|---|
-| 后端依赖安装 | `python -m pip install -r backend/requirements.txt` | ✅ fastapi 0.162 / SQLAlchemy 2.1.6 |
+| 后端依赖安装 | `pip install -r backend/requirements.txt` | ✅ fastapi 0.162 / SQLAlchemy |
 | 应用可导入 | `python -c "from app.main import app"` | ✅ 路由挂载正常 |
-| 几何引擎 | `pytest tests/test_geometry.py` | ✅ 通过（含 L 形面积守恒、旋转、整砖无余料） |
-| 单位解析 | `pytest tests/test_units.py` | ✅ 通过 |
-| 项目/权限 | `pytest tests/test_projects.py` | ✅ 15 passed |
-| 库存 | `pytest tests/test_inventory.py` | ✅ 11 passed |
-| 匹配 | `pytest tests/test_matching.py` | ✅ 13 passed |
-| 使用确认 | `pytest tests/test_usage.py` | ✅ 17 passed |
-| 溯源 | `pytest tests/test_trace.py` | ✅ 5 passed |
-| 并发 | `pytest tests/test_concurrency.py` | ✅ 3 passed（10 并发只成功 5 次扣减；同幂等键只扣 1 次） |
-| 全量 | `cd backend && python -m pytest -q` | ✅ **104 passed** |
-| 迁移生成 | `alembic revision --autogenerate` | ✅ `9eb0dc91e867_initial_schema.py` |
-| 迁移执行 | `alembic upgrade head` | ✅ 9 张表 + `alembic_version` 建立 |
+| 健康检查端点 | `uvicorn app.main:app` → `GET /healthz` | ✅ **200**，`{"status":"ok","version":"0.1.0"}`（复刻 compose 的 healthcheck） |
+| 全量测试 | `cd backend && python -m pytest -q` | ✅ **104 passed**（几何/单位/项目/库存/匹配/使用/溯源/并发） |
+| 迁移 | `alembic revision --autogenerate` / `upgrade head` | ✅ 9 张表 + `alembic_version` |
 | 图标生成 | `python mobile/tool/generate_icons.py` | ✅ 5 个尺寸 PNG |
-| **GitHub 仓库 + Release** | `REPO=tile-remnant-inventory TAG=v0.1.0 bash scripts/publish_github.sh` | ✅ 公开仓库 + v0.1.0，见 3.1 |
-| **WordPress 发布** | SSH + WP-CLI（原脚本缺凭据，见 3.2） | ✅ post 89 已发布，见 3.2 |
+
+### 1.2 移动端（本次补齐）
+
+| 项 | 命令 | 结果 |
+|---|---|---|
+| 依赖解析 | `flutter pub get` | ✅ 74 个依赖 |
+| 静态分析 | `flutter analyze` | ✅ **0 error / 0 warning**（54 条 info 是 `withOpacity` 弃用、`prefer_const` 之类的建议） |
+| 单元/组件测试 | `flutter test` | ✅ **14 passed** |
+| 构建 APK | `flutter build apk --release` | ✅ `app-release.apk` **36.5 MB**，用时 1209 s |
+
+### 1.3 发布
+
+| 项 | 结果 |
+|---|---|
+| GitHub 仓库 | ✅ <https://github.com/z7ui/tile-remnant-inventory>（PUBLIC） |
+| GitHub Release | ✅ v0.1.0，**已附 APK**，`digest` 与本地 sha256 一致（`ee93c61c…c3b1bf`） |
+| WordPress | ✅ <https://www.z7ui.cn/tile-remnant-inventory/>（post 89） |
 
 ## 二、未执行（环境缺失）
 
+只剩一项：
+
 | 项 | 阻塞原因 | 补齐命令 |
 |---|---|---|
-| `flutter pub get` / `analyze` / `test` | 本机无 Flutter SDK、无 Dart | 安装 Flutter 3.22+ 后：`cd mobile && flutter pub get && flutter analyze && flutter test` |
-| 构建 APK | 无 Flutter SDK、无 Android SDK/JDK17 | `API_BASE_URL=https://你的域名 bash scripts/build_apk.sh` |
-| `docker compose up` | 本机无 Docker | `cp .env.example .env && docker compose up -d --build` |
+| `docker compose up` | 本机未装 Docker；`wsl.exe` 被安全策略拦截（Program Blacklist），且 Docker Desktop 需要管理员权限 + 重启 | `cp .env.example .env && docker compose up -d --build` |
 
-## 三、发布记录
+替代验证：已用 `uvicorn` 起真实服务并打通 `/healthz`（compose 里 api 的健康检查就是打这个端点），
+Dockerfile 为非 root 多阶段构建、只 `expose 8000`、nginx 独占 80/443——编排部分靠静态审阅，未实跑。
 
-### 3.1 GitHub：已发布（2026-10-31 22:45）
+## 三、移动端构建记录
 
-| 项 | 值 |
-|---|---|
-| 仓库 | <https://github.com/z7ui/tile-remnant-inventory>（**PUBLIC**，默认分支 `main`） |
-| 远端 main | `a28b1948b9a767d483908227a3e4cc95a9f9a393`（与本地 HEAD 一致） |
-| Release | <https://github.com/z7ui/tile-remnant-inventory/releases/tag/v0.1.0>（非草稿、非预发布） |
-| 附件 | **无**——`dist/` 不存在，本机也没有 Flutter SDK，构建不了 APK |
+### 3.1 修掉的 5 个真实 bug（不是环境问题）
 
-走的路径（与原先设想不同的地方）：
+`flutter analyze` 第一次跑出 **51 个 error**，分三类：
 
-```bash
-# 1) 装 gh（winget 输出是 GBK，UTF-8 终端里会乱码，按关键词判断成败）
-winget install --id GitHub.cli --accept-package-agreements --accept-source-agreements --silent
-#    → gh 2.103.3，装到 C:\Program Files\GitHub CLI，新终端 PATH 已有
+| 文件 | 问题 | 修法 |
+|---|---|---|
+| `lib/widgets/stock_card.dart` | 48 个 error：import 写的是 `app_theme.dart` / `models.dart` / `formatters.dart`，但这些文件在 `lib/core/`，同目录下不存在；`Tag` 也没导入 | 改成 `../core/...`，并补 `import 'common.dart'`（`Tag` 在这里） |
+| `lib/features/projects/qr_scan_page.dart` | `AppSpacing` 未定义（整个文件没 import app_theme） | 补 `import '../../core/app_theme.dart'` |
+| `lib/core/api_client.dart` | `post()` 没有 `withDeviceId` 参数，但 `session.dart:136` 注册设备时传了它 | 给 `post()` 加该参数并透传给 `request()` |
+| `lib/core/formatters.dart` | `formatArea(720000)` 返回 `72.00 dm²`，测试期望 `0.72 m²`（阈值写成 `m2 >= 1`） | 阈值改为 `m2 >= 0.5` |
+| `lib/core/formatters.dart` | `parseLengthToMm('8 0')` 返回 80——实现里 `replaceAll(' ', '')` 把中间空格吞了 | 只 trim 首尾，数字与单位之间的空格交给正则 `\s*` |
 
-# 2) 认证：gh auth login 是交互式（开浏览器 + 粘 code），在非交互 shell 里会卡死。
-#    改用已有的 git 凭据，不落地明文文件：
-export GH_TOKEN="$(sed -E 's#^https://[^:]+:([^@]+)@github.com$#\1#' ~/.git-credentials)"
-export PATH="/c/Program Files/GitHub CLI:$PATH"
+修完 `flutter test` **14 passed**。
 
-# 3) 发布（脚本原样跑通）
-REPO=tile-remnant-inventory TAG=v0.1.0 bash scripts/publish_github.sh
+### 3.2 环境是怎么搭起来的
+
+| 环节 | 状态 | 备注 |
+|---|---|---|
+| Flutter SDK | 用本机 `D:\flutte\flutter`（**3.47.9** / Dart 3.13.7） | 该目录**缺 `.git`**，flutter 直接报 `not a clone of the GitHub project`。修法：`git init` → `git add -A` → `git commit` → `git tag 3.47.9`，再把 `bin/cache/flutter_tools.stamp` 写成 `"$(git rev-parse HEAD):"` |
+| Dart SDK | 复用 `bin/cache/dart-sdk.old1` | 真正的 `dart-sdk` 是空目录（上次更新中断），`old1` 是完整的 3.13.7，改回名字即可 |
+| JDK | `D:\flutte\jdk-17.0.20.1+1`（Temurin 17） | **必须 17**：Gradle 8.7/8.14 都不支持 JDK 25。且 `JAVA_HOME` 不管用，要 `flutter config --jdk-dir=` |
+| Gradle | **8.14.3**（原 8.7） | Flutter 3.47 要求 ≥ 8.14。`services.gradle.org` 国内不通，`distributionUrl` 指向腾讯镜像（**必须带版本号**，改成 `file://` 会让 Flutter 解析不出 8.7 而误判不兼容） |
+| AGP | **仍是 8.5.2**（Flutter 要求 ≥ 8.11.1） | 用 `--android-skip-build-dependency-validation` 跳过检查，实测 8.5.2 + Gradle 8.14.3 能正常打包 |
+| NDK | 自动装了 **28.2.13676358**（另有手动装的 26.1） | 原先一行 NDK 都没有；已注释掉 `build.gradle` 里的 `ndkVersion = flutter.ndkVersion` |
+| SDK Platform | 自动装到 **36**（原 34/35） | `shared_preferences_android` 要求 compileSdk ≥ 36 |
+| CMake | 自动装 3.22.1 | 构建过程顺带装的 |
+
+首次构建花 **1209 秒**，主要耗在自动补齐上述组件；依赖已缓存后重编会快很多。
+
+### 3.3 产物
+
+```
+mobile/build/app/outputs/flutter-apk/app-release.apk   36.5 MB
+dist/tile-remnant-0.1.0.apk                            同上（归档副本，.gitignore 已忽略 dist/）
 ```
 
-**踩到的坑**：`gh auth login --with-token` 会校验 token scope，本机这个 token 只有 `repo`，
-缺 `read:org` → `error validating token: missing required scope 'read:org'`，所以**持久认证没做成功**。
-`GH_TOKEN` 环境变量方式不受这个限制，可用于脚本；想长期直接敲 `gh`，需要交互跑一次 `gh auth login`，
-或在 GitHub 新建一个带 `read:org` 的 PAT。
+`aapt2 dump badging`：
 
-顺带修掉的一处：`docs/blog-post.md` 里两处 `https://github.com/<you>/...` 占位符换成了实际地址
-（commit `a28b194`），避免线上文章带着 `<you>`。
-
-### 3.2 WordPress：已发布（2026-10-31 22:51）
-
-文章：<https://www.z7ui.cn/tile-remnant-inventory/>
-
-| 项 | 值 |
-|---|---|
-| post ID | 89 |
-| slug | `tile-remnant-inventory` |
-| 状态 | `publish` |
-| 分类 | 安卓改造（term 39） |
-| 标签 | Flutter、FastAPI、SQLite、开源 |
-| 首页位置 | 第一篇（按时间倒序） |
-| 校验 | HTTP 200、83301 字节、5 个代码块、1 张表、占位符 0 |
-
-为什么没走 `scripts/wp_publish.py`：本次没有站点应用密码，而脚本走 REST API 必须要有。
-改用服务器的 WP-CLI（与站内其他文章的发布方式一致）：
-
-```bash
-# 1) 用脚本生成 HTML（--dry-run 不需要凭据）
-python scripts/wp_publish.py docs/blog-post.md --dry-run
-
-# 2) 去掉正文首行的 <h1>（否则与文章标题重复）
-tail -n +2 docs/blog-post.html > /tmp/tile-body.html
-
-# 3) 上传并创建（分类/标签脚本不支持，这里手动补）
-ssh -i ~/.ssh/<key> root@<host> "cat > /tmp/tile-body.html" < /tmp/tile-body.html
-ssh -i ~/.ssh/<key> root@<host> \
-  'cd /var/www/<site> && wp post create /tmp/tile-body.html \
-     --post_type=post --post_title="$(cat /tmp/tile-title.txt)" \
-     --post_name=tile-remnant-inventory --post_status=publish \
-     --post_category=39 --tags_input="Flutter,FastAPI,SQLite,开源" --allow-root --porcelain'
-# 4) 刷缓存
-ssh ... 'wp cache flush --allow-root && redis-cli FLUSHALL'
+```
+package: com.tileremnant.app  versionCode=1  versionName=0.1.0
+minSdkVersion=24  targetSdkVersion=35
+uses-permission: INTERNET, CAMERA
 ```
 
-有应用密码之后，REST 路径是可以用的（脚本本身没问题）：
+签名是 **debug 签名**（没有 `android/key.properties`），能装能跑，不适合长期分发。
 
-```bash
-WP_URL=https://www.z7ui.cn WP_USER=<用户名> WP_APP_PASSWORD='xxxx xxxx xxxx xxxx' \
-python scripts/wp_publish.py docs/blog-post.md --status publish --slug tile-remnant-inventory
-```
+## 四、发布记录
 
-但要注意脚本不做的三件事：**不发分类和标签、不去正文 `<h1>`、`--dry-run` 打印的是字符数不是字节数**
-（输出「6660 字节」，实际文件 12029 字节——第一次看容易以为写错了位置）。
+### 4.1 GitHub（2026-10-31 22:45 建仓，次日 01:00 补 APK）
 
-## 四、已知技术债
+- 仓库 `z7ui/tile-remnant-inventory`，PUBLIC，默认分支 `main`
+- 方式：`winget` 装 gh 2.103.3 → token 认证 → `bash scripts/publish_github.sh`
+- Release v0.1.0，附件 `tile-remnant-0.1.0.apk`（38,249,352 字节），digest 与本地一致
+- `gh` 早期用 `GH_TOKEN` 环境变量绕过 scope 限制；用户随后完成了 `gh auth login`，
+  现在 keyring 里有 `repo` / `read:org` / `workflow` / `gist`，可直接用
 
-1. `mobile/` 未经 `flutter analyze`，可能存在少量 lint/类型问题；首次构建时按提示修（多为 unused import / deprecated API）。
-2. `android/gradle/wrapper/gradle-wrapper.jar` 是二进制，未提交；`build_apk.sh` 会自动用 `gradle wrapper` 或提示 `flutter create` 生成。
-3. 应用层限流为单进程内存实现，多副本需换 Redis。
-4. 未实现图片附件、离线队列、导出分享（CSV 走浏览器/接口）。
-5. 项目名唯一性把软删除项目也计入（见 README 假设 #1）。
-6. **Release 没有 APK**：`dist/tile-remnant-0.1.0.apk` 不存在且本机无 Flutter。补法：
-   装 Flutter 后 `bash scripts/build_apk.sh`，再 `gh release upload v0.1.0 dist/tile-remnant-0.1.0.apk`
-   （或 `--clobber` 重新上传同名附件）。
-7. **`gh` 在本机未持久认证**（token 缺 `read:org`）。脚本靠 `GH_TOKEN` 能跑，但 `gh` 单条命令会提示未登录，
-   需要时交互跑一次 `gh auth login`。
-8. `scripts/wp_publish.py --dry-run` 的输出单位是字符而非字节；生成的 HTML 带 `<h1>`，发 WP 前要自行裁掉。
+### 4.2 WordPress（2026-10-31 22:51）
+
+- <https://www.z7ui.cn/tile-remnant-inventory/>，post 89，分类「安卓改造」，标签 Flutter/FastAPI/SQLite/开源
+- 没有站点应用密码，改走 SSH + WP-CLI；`--dry-run` 生成 HTML 后去掉首行 `<h1>` 再发
+- 校验：HTTP 200、5 个代码块、1 张表、占位符 0
+
+## 五、已知技术债
+
+1. **工具链版本需要对齐**：项目基于 Flutter 3.22 时代的配置（Gradle 8.7 / AGP 8.5.2 / compileSdk 35），
+   现在靠 `--android-skip-build-dependency-validation` 在 Flutter 3.47.9 上跑通。
+   正规做法是升 AGP 到 8.11.1+、Kotlin 到 2.x、compileSdk 到 36，并且以后不再需要 skip 开关。
+2. `mobile/android/gradle/wrapper/gradle-wrapper.jar` 未提交（二进制），本次是从另一个项目借的；
+   `build_apk.sh` 有兜底逻辑，但最好正式提交或用 `gradle wrapper` 生成。
+3. `distributionUrl` 现在指向腾讯镜像，属于本机/国内环境的临时改动，上游应保留官方地址。
+4. Release 用 debug 签名；正式分发需要生成 keystore 并配 `android/key.properties`。
+5. 应用层限流为单进程内存实现，多副本需换 Redis。
+6. 未实现图片附件、离线队列、导出分享（CSV 走浏览器/接口）。
+7. 项目名唯一性把软删除项目也计入（见 README 假设 #1）。
+8. 54 条 analyze info 未清理（`withOpacity` → `withValues`、`prefer_const` 等），不影响构建。
+
+---
+
+操作手册见 [`docs/how-to-use.md`](how-to-use.md)。

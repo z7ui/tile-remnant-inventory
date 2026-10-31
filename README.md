@@ -8,7 +8,9 @@
 - 部署：Docker Compose + Nginx + HTTPS
 - 许可证：GPL-3.0
 
-> 当前版本 **v0.1.0**。后端 104 个 pytest 用例全部通过；Flutter 代码与 Android 工程已完整提交，但**本次交付环境没有 Flutter SDK / Android SDK**，因此 APK 未在本机实际编译，`flutter analyze/test` 也未执行（见文末「本次交付的实际状态」）。
+> 当前版本 **v0.1.0**。后端 104 个 pytest 用例全部通过；移动端已用 Flutter 3.47.9 + JDK 17 实际跑通 `pub get` / `analyze`（0 error）/ `test`（14 passed），并构建出 release APK。
+>
+> **只想用，不想看代码？** → [`docs/how-to-use.md`](docs/how-to-use.md)（装包、建项目、入库、匹配、切割、溯源，以及构建与部署的坑）
 
 ---
 
@@ -275,6 +277,16 @@ EOF
 
 没有 `key.properties` 时 Release 会退化为 debug 签名（可安装，但不适合长期分发）。
 
+### 常见报错
+
+| 报错 | 原因 / 解决 |
+|---|---|
+| `Java/Gradle incompatibility`，提示 Java 25 | Flutter 默认用 Android Studio 自带的 JDK（可能是 25），而 Gradle 8.7 只支持到 21。必须 `flutter config --jdk-dir="<JDK17 路径>"`——**只设 `JAVA_HOME` 不生效**，Flutter 有自己的 jdk 配置 |
+| `Downloading ... gradle-8.7-all.zip failed: timeout` | `services.gradle.org` 国内经常连不上。下腾讯镜像（`https://mirrors.cloud.tencent.com/gradle/gradle-8.7-all.zip`），把 `gradle-wrapper.properties` 的 `distributionUrl` 临时指向本地文件：`file\:///D\:/路径/gradle-8.7-all.zip` |
+| `Invalid WebSocket upgrade request`（跑 `flutter test` 时） | 系统代理拦了 localhost 的 WebSocket。清掉 `http_proxy` / `https_proxy`，并设 `NO_PROXY=localhost,127.0.0.1,::1` |
+
+SDK 缺 `.git`、`dart-sdk.old1` 这类更少见的问题，排查过程记在 [`docs/how-to-use.md`](docs/how-to-use.md) 第 3.3 节。
+
 ## 十一、备份与恢复
 
 ```bash
@@ -336,9 +348,11 @@ bash scripts/restore.sh backups/20261031-2100/tile_remnant.db
 | 后端代码 + 迁移 + 测试 | ✅ 完成，`pytest` 104 passed |
 | Alembic 初始迁移 | ✅ 已生成并实际 `upgrade head` 验证 |
 | Flutter 源码（10 个页面 + 图示组件） | ✅ 完整提交 |
-| Flutter `analyze` / `test` / APK 构建 | ⚠️ **未执行**：交付环境无 Flutter SDK、无 Android SDK |
-| Docker Compose / Nginx 配置 | ✅ 已提供（未在本机 `docker compose up`，环境无 Docker） |
-| GitHub 仓库 / Release | ⚠️ **未发布**：本机无 `gh` CLI；已用已连接的 GitHub 集成（账号 `z7ui`）尝试建仓，返回 `403 Resource not accessible by integration`（该集成 token 无建仓权限）。本地仓库已有 3 个提交，推上去即可 |
-| WordPress 博客 | ⚠️ **未发布**：无 WP 站点与应用密码；文章见 `docs/blog-post.md`，可用 `scripts/wp_publish.py --dry-run` 生成 HTML |
+| Flutter `analyze` / `test` | ✅ `analyze` **0 error / 0 warning**；`test` **14 passed**（修了 5 个真实 bug：3 处漏 import、`post()` 缺参数、`formatArea` 阈值与 `parseLengthToMm` 吞空格） |
+| APK 构建 | ✅ `app-release.apk` **36.5 MB**（Flutter 3.47.9 + JDK 17 + Gradle 8.14.3，debug 签名） |
+| Docker Compose / Nginx 配置 | ⚠️ **未实跑**：本机无 Docker，`wsl.exe` 被安全策略拦截。已用 `uvicorn` 起真实服务验证 `/healthz` 返回 200（compose 的健康检查就是这条） |
+| GitHub 仓库 / Release | ✅ <https://github.com/z7ui/tile-remnant-inventory>（PUBLIC），Release v0.1.0 **已附 APK**，digest 与本地一致 |
+| WordPress 博客 | ✅ <https://www.z7ui.cn/tile-remnant-inventory/>（post 89） |
 
-未执行的部分都在 [`docs/DELIVERY-STATUS.md`](docs/DELIVERY-STATUS.md) 里列了精确命令与阻塞原因，不编造成功结果。
+环境搭建与踩坑的完整记录见 [`docs/DELIVERY-STATUS.md`](docs/DELIVERY-STATUS.md)，
+面向使用者的操作说明见 [`docs/how-to-use.md`](docs/how-to-use.md)。
