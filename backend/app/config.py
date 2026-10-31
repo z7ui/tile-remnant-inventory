@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "Tile Remnant Inventory API"
-    app_version: str = "0.1.0"
+    app_version: str = "0.1.1"
     environment: str = "development"
     log_level: str = "INFO"
 

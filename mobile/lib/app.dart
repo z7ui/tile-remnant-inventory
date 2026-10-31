@@ -102,19 +102,28 @@ class _BootScreen extends StatelessWidget {
               else ...<Widget>[
                 ErrorBanner(message: error!, onRetry: onRetry),
                 const SizedBox(height: AppSpacing.md),
-                TextButton.icon(
-                  onPressed: () async {
-                    final String? url = await Navigator.of(context).push<String>(
-                      MaterialPageRoute<String>(builder: (_) => const ServerSetupPage()),
-                    );
-                    if (url != null) {
-                      await Session.persistServerUrl(url);
-                    }
-                    onRetry();
-                  },
-                  icon: const Icon(Icons.dns_outlined),
-                  label: const Text('修改服务器地址'),
-                ),
+                // release 包地址写死：不给改，只能重试
+                if (!AppConfig.serverLocked)
+                  TextButton.icon(
+                    onPressed: () async {
+                      final String? url = await Navigator.of(context).push<String>(
+                        MaterialPageRoute<String>(builder: (_) => const ServerSetupPage()),
+                      );
+                      if (url != null) {
+                        await Session.persistServerUrl(url);
+                      }
+                      onRetry();
+                    },
+                    icon: const Icon(Icons.dns_outlined),
+                    label: const Text('修改服务器地址'),
+                  ),
+                if (AppConfig.serverLocked)
+                  Text(
+                    '服务器地址已固定在安装包内（${AppConfig.defaultBaseUrl}），'
+                    '连不上请检查网络或稍后重试。',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12.5, color: AppColors.sub(context)),
+                  ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   '服务器地址：${AppConfig.defaultBaseUrl}',

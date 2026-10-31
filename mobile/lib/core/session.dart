@@ -91,7 +91,23 @@ class Session extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      serverUrl = await _store.read(_kServer) ?? AppConfig.defaultBaseUrl;
+      if (AppConfig.serverLocked) {
+        // release：地址由编译决定，本地存的那份一律作废。
+        // 如果以前连过别的服务器，设备身份是那边签发的，带过来会 401，
+        // 所以连同项目列表一起清掉，按新地址重新注册。
+        final String? stale = await _store.read(_kServer);
+        if (stale != null) {
+          if (stale != AppConfig.defaultBaseUrl) {
+            await _store.delete(_kDeviceId);
+            await _store.delete(_kDeviceSecret);
+            await _store.delete(_kProjects);
+          }
+          await _store.delete(_kServer);
+        }
+        serverUrl = AppConfig.defaultBaseUrl;
+      } else {
+        serverUrl = await _store.read(_kServer) ?? AppConfig.defaultBaseUrl;
+      }
       api = ApiClient(baseUrl: serverUrl)..deviceId = null..deviceSecret = null;
       deviceId = await _store.read(_kDeviceId);
       deviceSecret = await _store.read(_kDeviceSecret);
@@ -178,6 +194,10 @@ class Session extends ChangeNotifier {
   }
 
   Future<void> setServer(String url) async {
+    if (AppConfig.serverLocked) {
+      // 双保险：即使某个入口漏了判断，也不允许改。
+      throw StateError('安装包已锁定服务器地址，无法在此更换');
+    }
     final String normalised = url.trim().replaceAll(RegExp(r'/+$'), '');
     if (normalised == serverUrl) return;
     await _store.write(_kServer, normalised);

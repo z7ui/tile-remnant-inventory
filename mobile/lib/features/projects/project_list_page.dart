@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
+import '../../core/config.dart';
 import '../../core/formatters.dart';
 import '../../core/models.dart';
 import '../../core/session.dart';
@@ -109,11 +110,13 @@ class _ProjectListPageState extends State<ProjectListPage> {
         context,
         '余砖管家',
         actions: <Widget>[
-          IconButton(
-            onPressed: _openServerSetup,
-            tooltip: '服务器与同步设置',
-            icon: const Icon(Icons.settings_outlined),
-          ),
+          // release 包里地址写死在安装包内，这个入口只在 debug 构建出现
+          if (!AppConfig.serverLocked)
+            IconButton(
+              onPressed: _openServerSetup,
+              tooltip: '服务器与同步设置',
+              icon: const Icon(Icons.settings_outlined),
+            ),
         ],
       ),
       body: RefreshIndicator(

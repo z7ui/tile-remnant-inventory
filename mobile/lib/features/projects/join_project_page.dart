@@ -147,17 +147,19 @@ class _JoinProjectPageState extends State<JoinProjectPage> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        TextButton(
-                          onPressed: () async {
-                            final String? url = await Navigator.of(context).push<String>(
-                              MaterialPageRoute<String>(
-                                builder: (_) => ServerSetupPage(initialUrl: _server),
-                              ),
-                            );
-                            if (url != null && mounted) setState(() => _server = url);
-                          },
-                          child: const Text('修改'),
-                        ),
+                        // release 包地址写死，这里只读展示，不给改
+                        if (!AppConfig.serverLocked)
+                          TextButton(
+                            onPressed: () async {
+                              final String? url = await Navigator.of(context).push<String>(
+                                MaterialPageRoute<String>(
+                                  builder: (_) => ServerSetupPage(initialUrl: _server),
+                                ),
+                              );
+                              if (url != null && mounted) setState(() => _server = url);
+                            },
+                            child: const Text('修改'),
+                          ),
                       ],
                     ),
                   ),

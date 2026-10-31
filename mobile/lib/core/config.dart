@@ -1,13 +1,24 @@
-/// Static configuration. The server address can be changed at runtime in the
-/// app (工地现场往往不是 443 默认域名), so it is only a default value here.
+import 'package:flutter/foundation.dart' show kReleaseMode;
+
+/// Static configuration.
 class AppConfig {
   const AppConfig._();
 
-  static const String appVersion = '0.1.0';
+  static const String appVersion = '0.1.1';
 
-  /// Pass at build time: `--dart-define=API_BASE_URL=https://tiles.example.com`
-  static const String defaultBaseUrl =
-      String.fromEnvironment('API_BASE_URL', defaultValue: 'https://tiles.example.com');
+  /// 服务器地址在**编译时**定死：
+  ///   flutter build apk --dart-define=API_BASE_URL=https://www.z7ui.cn/tile-api
+  ///
+  /// 不允许运行时改的原因：这个 App 没有账号体系，设备身份（设备 ID + 密钥）
+  /// 是发给「服务器」的。如果地址能在界面上随便填，等于给了一条把设备密钥
+  /// 骗到第三方服务器的路。地址跟着安装包走，改地址只能换安装包。
+  static const String defaultBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://www.z7ui.cn/tile-api',
+  );
+
+  /// Release 构建锁定服务器地址；debug 保留可改（要连本机/测试机）。
+  static bool get serverLocked => kReleaseMode;
 
   static const String inviteScheme = 'tileremnant';
 
