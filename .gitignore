@@ -52,6 +52,9 @@ mobile/ios/Flutter/ephemeral/
 mobile/macos/Flutter/ephemeral/
 *.iml
 
+# --- generated ---
+docs/blog-post.html
+
 # --- build artifacts -------------------------------------------------------
 dist/
 build/

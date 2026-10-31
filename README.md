@@ -338,7 +338,7 @@ bash scripts/restore.sh backups/20261031-2100/tile_remnant.db
 | Flutter 源码（10 个页面 + 图示组件） | ✅ 完整提交 |
 | Flutter `analyze` / `test` / APK 构建 | ⚠️ **未执行**：交付环境无 Flutter SDK、无 Android SDK |
 | Docker Compose / Nginx 配置 | ✅ 已提供（未在本机 `docker compose up`，环境无 Docker） |
-| GitHub 仓库 / Release | ⚠️ **未发布**：环境无 `gh` CLI 且未认证；`scripts/publish_github.sh` 已就绪 |
+| GitHub 仓库 / Release | ⚠️ **未发布**：本机无 `gh` CLI；已用已连接的 GitHub 集成（账号 `z7ui`）尝试建仓，返回 `403 Resource not accessible by integration`（该集成 token 无建仓权限）。本地仓库已有 3 个提交，推上去即可 |
 | WordPress 博客 | ⚠️ **未发布**：无 WP 站点与应用密码；文章见 `docs/blog-post.md`，可用 `scripts/wp_publish.py --dry-run` 生成 HTML |
 
 未执行的部分都在 [`docs/DELIVERY-STATUS.md`](docs/DELIVERY-STATUS.md) 里列了精确命令与阻塞原因，不编造成功结果。
