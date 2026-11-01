@@ -130,7 +130,10 @@ class _ProjectListPageState extends State<ProjectListPage> {
     final Session session = SessionScope.of(context);
     session.select(project);
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => ProjectShellPage(project: project)),
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: ProjectShellPage.routeName),
+        builder: (_) => ProjectShellPage(project: project),
+      ),
     );
     if (mounted) await _refresh();
   }

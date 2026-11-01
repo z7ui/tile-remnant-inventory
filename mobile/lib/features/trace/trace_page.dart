@@ -6,6 +6,7 @@ import '../../core/models.dart';
 import '../../core/project_api.dart';
 import '../../widgets/common.dart';
 import '../../widgets/tile_shape_preview.dart';
+import '../home/project_shell_page.dart';
 import '../movements/movement_detail_page.dart';
 
 /// 原砖 vs 需求 vs 余料 三列对比 + 父子链 + 关联流水.
@@ -55,6 +56,20 @@ class _TracePageState extends State<TracePage> {
     }
   }
 
+  /// 一路 pop 回项目主页所在的 route。
+  ///
+  /// 判定同时认「路由名是 /project」和「已经是根路由」——后者是兜底：
+  /// 万一将来有入口不是从项目列表进的（比如通知直接开溯源），
+  /// 也不会因为找不到名字而抛异常，最多退到栈底。
+  void _backToProject(BuildContext context) {
+    final NavigatorState navigator = Navigator.of(context);
+    if (!navigator.canPop()) return;
+    navigator.popUntil((Route<dynamic> route) {
+      final String? name = route.settings.name;
+      return name == ProjectShellPage.routeName || route.isFirst;
+    });
+  }
+
   static int _intOf(Map<String, dynamic>? map, String key) {
     final dynamic value = map?[key];
     if (value is num) return value.toInt();
@@ -85,6 +100,13 @@ class _TracePageState extends State<TracePage> {
         context,
         widget.title == null ? '溯源对比' : '溯源 ${widget.title}',
         actions: <Widget>[
+          // 溯源是「点子批次 → 再开一个溯源页」的一层层嵌套，点太深时按返回要按很多次。
+          // 这个按钮一次退到底，回到项目主页（库存/匹配/流水/项目那个 shell），而不是回首页。
+          IconButton(
+            tooltip: '返回项目',
+            onPressed: () => _backToProject(context),
+            icon: const Icon(Icons.folder_open_outlined),
+          ),
           IconButton(
               tooltip: '刷新', onPressed: _load, icon: const Icon(Icons.refresh)),
         ],

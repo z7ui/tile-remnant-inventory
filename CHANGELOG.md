@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.23] - 2026-11-01
+
+### Added
+
+#### 移动端（Flutter）
+- 溯源页右上角新增「返回项目」按钮：溯源是「点子批次 → 再开一个溯源页」的一层层嵌套，
+  点太深时按返回要按很多次；这个按钮一次退回**项目主页**（库存/匹配/流水/项目那个 shell），
+  不是退回首页。实现上是给项目 shell 的路由命名 `/project`，按钮 `popUntil` 到它为止，
+  并兜底「已经是根路由」的情况，避免找不到名字时抛异常。
+
 ## [0.1.0] - 2026-10-31
 
 ### Added

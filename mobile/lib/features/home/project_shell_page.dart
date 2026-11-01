@@ -14,6 +14,10 @@ import '../settings/project_settings_page.dart';
 class ProjectShellPage extends StatefulWidget {
   const ProjectShellPage({super.key, required this.project});
 
+  /// 路由名。溯源页「一键回到项目」靠它定位，
+  /// 所以推这个页面时必须把 name 带上（见 project_list_page.dart）。
+  static const String routeName = '/project';
+
   final JoinedProject project;
 
   @override

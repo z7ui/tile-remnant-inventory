@@ -73,3 +73,4 @@ Thumbs.db
 
 # 含签名口令的交接方案：只留本地，绝不上传
 docs/signing-recovery-handoff.md
+docs/signing-handoff-merged-20261101.md
