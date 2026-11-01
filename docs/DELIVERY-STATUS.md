@@ -133,17 +133,27 @@ uses-permission: INTERNET, CAMERA
 
 ## 五、已知技术债
 
-1. **工具链版本需要对齐**：项目基于 Flutter 3.22 时代的配置（Gradle 8.7 / AGP 8.5.2 / compileSdk 35），
-   现在靠 `--android-skip-build-dependency-validation` 在 Flutter 3.47.9 上跑通。
-   正规做法是升 AGP 到 8.11.1+、Kotlin 到 2.x、compileSdk 到 36，并且以后不再需要 skip 开关。
-2. `mobile/android/gradle/wrapper/gradle-wrapper.jar` 未提交（二进制），本次是从另一个项目借的；
-   `build_apk.sh` 有兜底逻辑，但最好正式提交或用 `gradle wrapper` 生成。
-3. `distributionUrl` 现在指向腾讯镜像，属于本机/国内环境的临时改动，上游应保留官方地址。
-4. Release 用 debug 签名；正式分发需要生成 keystore 并配 `android/key.properties`。
-5. 应用层限流为单进程内存实现，多副本需换 Redis。
-6. 未实现图片附件、离线队列、导出分享（CSV 走浏览器/接口）。
-7. 项目名唯一性把软删除项目也计入（见 README 假设 #1）。
-8. 54 条 analyze info 未清理（`withOpacity` → `withValues`、`prefer_const` 等），不影响构建。
+### 已还清（v0.1.6）
+
+| # | 项 | 结果 |
+|---|---|---|
+| 1 | 工具链版本落后，靠 skip 开关硬撑 | ✅ Gradle 8.14.3 / **AGP 8.11.1** / **Kotlin 2.2.20** / **compileSdk 36**；`--android-skip-build-dependency-validation` **已不需要**。NDK 锁成已装的 28.2.13676358 |
+| 2 | `gradle-wrapper.jar` 未提交 | ✅ 已提交（含 gradlew / gradlew.bat） |
+| 4 | Release 用 debug 签名 | ✅ 已生成 keystore（`CN=Tile Remnant, O=z7ui`，SHA-256 `407cae1f…dafb`），`key.properties` 引用且被 gitignore |
+| 8 | 54 条 analyze info | ✅ `withOpacity` 25 处 → `withValues(alpha:)`，analyze 64 → 38 条 |
+
+> ⚠️ **keystore 必须自己再备份**：`D:/flutte/keystore/tile-upload.jks` + `PASSWORD.txt`。
+> 丢了就无法覆盖升级，只能让所有用户卸载重装。
+
+### 仍存在
+
+1. `distributionUrl` 指向腾讯镜像——国内环境需要，上游可换回官方地址。
+2. 应用层限流是单进程内存实现，多副本部署需换 Redis。
+3. 未实现图片附件、离线队列、导出分享（CSV 走浏览器/接口）。
+4. 项目名唯一性把软删除项目也计入（既定规则，E1）。
+5. 剩余 38 条 analyze info 是 `prefer_const`、`unused_import` 之类的风格建议，不影响构建。
+6. 更新包没有强制升级机制：App 只做「提示 + 让用户自己下载」，不强制、不静默安装
+   （Android 也不允许静默装）。
 
 ---
 
