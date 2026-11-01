@@ -75,8 +75,14 @@ ssh ... 'cd /opt/apps-archive/downloads && ls -1 tile-remnant-*.apk \
 
 ```
 服务器 /opt/apps-archive/downloads/
-公网 https://www.z7ui.cn/apps-archive/downloads/<文件名>
+真实下载 https://www.z7ui.cn/apps-archive/downloads/<文件名>
+对外链接 https://www.z7ui.cn/d/<文件名>     ← 文章里用这个
 ```
 
-nginx 里 `/apps-archive/` 映射到 `/opt/apps-archive/`，apk 的 MIME 是
-`application/vnd.android.package-archive`（浏览器会直接下载而不是当文本打开）。
+对外分享用 `/d/<文件名>` 中转：微信内置浏览器打开时显示「右上角浏览器打开」
+引导页（下载不了 APK），普通浏览器直接 302 到真实下载地址。中转逻辑在
+`/var/www/z7ui.cn/download.php`（源稿 `scripts/download_gate.php`），
+nginx `/d/` location 把它 rewrite 到 download.php。
+
+真实文件仍放在 `/opt/apps-archive/downloads/`（nginx `/apps-archive/` 映射），
+apk 的 MIME 是 `application/vnd.android.package-archive`。

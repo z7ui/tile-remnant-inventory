@@ -13,7 +13,7 @@
 - 版本 0.1.22
 - 文章：[工地上的半块砖，终于有地方放了](https://www.z7ui.cn/tile-remnant-inventory/)
 - 源码：[github.com/z7ui/tile-remnant-inventory](https://github.com/z7ui/tile-remnant-inventory)
-- 下载：[tile-remnant-0.1.22.apk](https://www.z7ui.cn/apps-archive/downloads/tile-remnant-0.1.22.apk)
+- 下载：[tile-remnant-0.1.22.apk](https://www.z7ui.cn/d/tile-remnant-0.1.22.apk)
 
 ## 清抖 · 给抖音界面做减法
 
@@ -31,7 +31,7 @@ LSPosed 模块，作用域只有抖音。核心不是"屏蔽广告"，而是**�
 - 版本 0.2
 - 文章：[边触：把三星的单手操作搬到小米，卡在了系统手势这道墙上](https://www.z7ui.cn/edgepad/)
 - 源码：[github.com/z7ui/edgepad](https://github.com/z7ui/edgepad)
-- 下载：[edgepad-0.2.apk](https://www.z7ui.cn/apps-archive/downloads/edgepad-0.2.apk)
+- 下载：[edgepad-0.2.apk](https://www.z7ui.cn/d/edgepad-0.2.apk)
 
 ## 规则树 RuleTree · 可视化的「如果…则…否则」
 
@@ -40,7 +40,7 @@ LSPosed 模块，作用域只有抖音。核心不是"屏蔽广告"，而是**�
 - 版本 0.12
 - 文章：[规则树：把「如果……则……否则」做成能存下来的东西](https://www.z7ui.cn/ruletree/)
 - 源码：[github.com/z7ui/ruletree](https://github.com/z7ui/ruletree)
-- 下载：[ruletree-0.12.apk](https://www.z7ui.cn/apps-archive/downloads/ruletree-0.12.apk)
+- 下载：[ruletree-0.12.apk](https://www.z7ui.cn/d/ruletree-0.12.apk)
 
 ## 定时快捷 RoutineX · 到点自己把事做了
 
@@ -49,7 +49,7 @@ LSPosed 模块，作用域只有抖音。核心不是"屏蔽广告"，而是**�
 - 版本 1.4
 - 文章：[定时快捷 RoutineX：让小米到点自己把签到点掉](https://www.z7ui.cn/routinex/)
 - 源码：[github.com/z7ui/routinex](https://github.com/z7ui/routinex)
-- 下载：[routinex-1.4.apk](https://www.z7ui.cn/apps-archive/downloads/routinex-1.4.apk)
+- 下载：[routinex-1.4.apk](https://www.z7ui.cn/d/routinex-1.4.apk)
 
 ## 幕布 Curtain · 一层可调的黑
 
@@ -58,7 +58,7 @@ LSPosed 模块，作用域只有抖音。核心不是"屏蔽广告"，而是**�
 - 版本 1.7
 - 文章：[幕布 Curtain：把屏幕调暗到只剩一层黑，设备照常运行](https://www.z7ui.cn/curtain/)
 - 源码：[github.com/z7ui/Curtain](https://github.com/z7ui/Curtain)
-- 下载：[Curtain-1.7.apk](https://www.z7ui.cn/apps-archive/downloads/Curtain-1.7.apk)
+- 下载：[Curtain-1.7.apk](https://www.z7ui.cn/d/Curtain-1.7.apk)
 
 ## PIN 滑动输入 · HyperOS 版
 
@@ -67,7 +67,7 @@ LSPosed 模块，作用域只有抖音。核心不是"屏蔽广告"，而是**�
 - 版本 1.2
 - 文章：[PIN 滑动输入：让 HyperOS 的锁屏支持 Flyme 那种「划过即输入」](https://www.z7ui.cn/pinswipe-hyperos/)
 - 源码：[github.com/z7ui/PinSwipe](https://github.com/z7ui/PinSwipe)
-- 下载：[PinSwipe-1.2.apk](https://www.z7ui.cn/apps-archive/downloads/PinSwipe-1.2.apk)
+- 下载：[PinSwipe-1.2.apk](https://www.z7ui.cn/d/PinSwipe-1.2.apk)
 
 ## PIN 滑动输入 for Galaxy · 三星版
 
@@ -76,7 +76,7 @@ LSPosed 模块，作用域只有抖音。核心不是"屏蔽广告"，而是**�
 - 版本 1.1
 - 文章：[PIN 滑动输入 for Galaxy：三星 One UI 也支持按住不松手、划过即输入](https://www.z7ui.cn/pinswipe-galaxy/)
 - 源码：[github.com/z7ui/PinSwipeForGalaxy](https://github.com/z7ui/PinSwipeForGalaxy)
-- 下载：[PinSwipeForGalaxy-1.1.apk](https://www.z7ui.cn/apps-archive/downloads/PinSwipeForGalaxy-1.1.apk)
+- 下载：[PinSwipeForGalaxy-1.1.apk](https://www.z7ui.cn/d/PinSwipeForGalaxy-1.1.apk)
 
 ## 一点说明
 
