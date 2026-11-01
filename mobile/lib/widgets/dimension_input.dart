@@ -21,6 +21,7 @@ class DimensionInput extends StatelessWidget {
     this.widthFocus,
     this.onLengthSubmitted,
     this.onWidthSubmitted,
+    this.compact = false,
   });
 
   final TextEditingController lengthController;
@@ -40,6 +41,11 @@ class DimensionInput extends StatelessWidget {
   final FocusNode? widthFocus;
   final VoidCallback? onLengthSubmitted;
   final VoidCallback? onWidthSubmitted;
+
+  /// 键盘弹起时用：收起「mm/cm + 说明」那一行，省出约 50dp。
+  /// 单位是输入前就该定的，边输边切很少见；而尺寸、片数、底部按钮
+  /// 才是高频操作，必须能同屏看到。
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -77,29 +83,34 @@ class DimensionInput extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: <Widget>[
-            SegmentedButton<String>(
-              segments: const <ButtonSegment<String>>[
-                ButtonSegment<String>(value: 'mm', label: Text('mm')),
-                ButtonSegment<String>(value: 'cm', label: Text('cm')),
-              ],
-              selected: <String>{unit},
-              showSelectedIcon: false,
-              onSelectionChanged: (Set<String> selection) =>
-                  onUnitChanged(selection.first),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                '只填数字，单位用左边的 mm / cm 切换',
-                style: TextStyle(fontSize: 12.5, color: AppColors.sub(context)),
-                maxLines: 2,
+        if (compact)
+          const SizedBox(height: AppSpacing.xs)
+        else ...<Widget>[
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: <Widget>[
+              SegmentedButton<String>(
+                segments: const <ButtonSegment<String>>[
+                  ButtonSegment<String>(value: 'mm', label: Text('mm')),
+                  ButtonSegment<String>(value: 'cm', label: Text('cm')),
+                ],
+                selected: <String>{unit},
+                showSelectedIcon: false,
+                onSelectionChanged: (Set<String> selection) =>
+                    onUnitChanged(selection.first),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  '只填数字，单位用左边的 mm / cm 切换',
+                  style:
+                      TextStyle(fontSize: 12.5, color: AppColors.sub(context)),
+                  maxLines: 2,
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

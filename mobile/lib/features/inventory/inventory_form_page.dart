@@ -164,6 +164,9 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 键盘弹起时进入紧凑模式：收起提示框和单位行，把高度让给
+    // 尺寸、片数和底部按钮——这三样才是真正常用的。
+    final bool typing = MediaQuery.of(context).viewInsets.bottom > 0;
     final int lengthMm = _lengthMm ?? 0;
     final int widthMm = _widthMm ?? 0;
     final bool hasPreview = lengthMm > 0 && widthMm > 0;
@@ -182,6 +185,7 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                     AppSpacing.lg, AppSpacing.xxl),
                 children: <Widget>[
                   DimensionInput(
+                    compact: typing,
                     lengthFocus: _lengthFocus,
                     widthFocus: _widthFocus,
                     onLengthSubmitted: () => _widthFocus.requestFocus(),
@@ -205,40 +209,42 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                   const SectionTitle(title: '片数'),
                   QuantityInput(
                       controller: _quantity, onChanged: (_) => setState(() {})),
-                  const SizedBox(height: AppSpacing.lg),
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: AppColors.card(context),
-                      borderRadius: BorderRadius.circular(AppRadius.control),
-                      border: Border.all(color: AppColors.line(context)),
-                    ),
-                    child: hasPreview
-                        ? TileShapePreview(
-                            widthMm: widthMm,
-                            heightMm: lengthMm,
-                            height: 140,
-                            caption: '录入的是整块矩形余砖（不含缺口）',
-                          )
-                        : Row(
-                            children: <Widget>[
-                              // 原来是 Icons.crop_square——一个空心方框，看着像「可选的选项框」，
-                              // 其实只是装饰，用户点了当然没反应。换成信息图标，明确是提示。
-                              Icon(Icons.info_outline,
-                                  size: 18, color: AppColors.sub(context)),
-                              const SizedBox(width: AppSpacing.sm),
-                              Expanded(
-                                child: Text(
-                                  '主动录入只支持矩形；异形（L 形）余料只能来自切割后入库。',
-                                  style: TextStyle(
-                                      fontSize: 12.5,
-                                      height: 1.45,
-                                      color: AppColors.sub(context)),
+                  if (!typing) ...<Widget>[
+                    const SizedBox(height: AppSpacing.lg),
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.card(context),
+                        borderRadius: BorderRadius.circular(AppRadius.control),
+                        border: Border.all(color: AppColors.line(context)),
+                      ),
+                      child: hasPreview
+                          ? TileShapePreview(
+                              widthMm: widthMm,
+                              heightMm: lengthMm,
+                              height: 140,
+                              caption: '录入的是整块矩形余砖（不含缺口）',
+                            )
+                          : Row(
+                              children: <Widget>[
+                                // 原来是 Icons.crop_square——一个空心方框，看着像「可选的选项框」，
+                                // 其实只是装饰，用户点了当然没反应。换成信息图标，明确是提示。
+                                Icon(Icons.info_outline,
+                                    size: 18, color: AppColors.sub(context)),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    '主动录入只支持矩形；异形（L 形）余料只能来自切割后入库。',
+                                    style: TextStyle(
+                                        fontSize: 12.5,
+                                        height: 1.45,
+                                        color: AppColors.sub(context)),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                  ),
+                              ],
+                            ),
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.lg),
                   const SectionTitle(title: '存放位置', subtitle: '方便以后找砖，可留空'),
                   TextField(
@@ -283,35 +289,32 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                 ],
               ),
             ),
-            // 键盘弹出时收起底部按钮：它贴着键盘占掉近 80dp，
-            // 把「片数」等输入框挤出可视区。收起键盘后按钮自动回来。
-            if (MediaQuery.of(context).viewInsets.bottom == 0)
-              BottomActionBar(
-                hint: hint,
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: SizedBox(
-                        height: AppSizes.primaryButton,
-                        child: OutlinedButton(
-                          onPressed:
-                              _submitting ? null : () => _submit(stay: true),
-                          child: const Text('连续入库'),
-                        ),
+            BottomActionBar(
+              hint: hint,
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: SizedBox(
+                      height: AppSizes.primaryButton,
+                      child: OutlinedButton(
+                        onPressed:
+                            _submitting ? null : () => _submit(stay: true),
+                        child: const Text('连续入库'),
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      flex: 2,
-                      child: PrimaryButton(
-                        label: '确认入库并返回',
-                        loading: _submitting,
-                        onPressed: () => _submit(stay: false),
-                      ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    flex: 2,
+                    child: PrimaryButton(
+                      label: '确认入库并返回',
+                      loading: _submitting,
+                      onPressed: () => _submit(stay: false),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
           ],
         ),
       ),

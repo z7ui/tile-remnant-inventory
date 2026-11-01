@@ -10,10 +10,10 @@
 
 界面按工地场景做：大按钮、数字键盘、离线可用、扫码加入项目。
 
-- 版本 0.1.15
+- 版本 0.1.16
 - 文章：[工地上的半块砖，终于有地方放了](https://www.z7ui.cn/tile-remnant-inventory/)
 - 源码：[github.com/z7ui/tile-remnant-inventory](https://github.com/z7ui/tile-remnant-inventory)
-- 下载：[tile-remnant-0.1.15.apk](https://www.z7ui.cn/apps-archive/downloads/tile-remnant-0.1.15.apk)
+- 下载：[tile-remnant-0.1.16.apk](https://www.z7ui.cn/apps-archive/downloads/tile-remnant-0.1.16.apk)
 
 ## 清抖 · 给抖音界面做减法
 
