@@ -66,7 +66,10 @@ def evaluate_batch(
     )
     best = feasible[0]
 
-    cap = max(1, min(want_pieces, max(1, batch.quantity), 20))
+    # 单块余料最多能切多少片需求，只需精确到需求数量即可。
+    # 之前这里混入 batch.quantity（那是「块数」，与单块切割片数无关）和硬编码 20，
+    # 导致大余料（如 1500×7490 切 600×600 实际能切 24 片）被低估成 20 片，匹配凑不满。
+    cap = max(1, want_pieces)
     max_pieces = geometry.pieces_available(region, w, h, demand_short, demand_long, cap)
     stock_area = batch.area_mm2
     demand_area = demand_short * demand_long
