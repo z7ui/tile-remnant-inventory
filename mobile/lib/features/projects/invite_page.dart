@@ -129,9 +129,9 @@ class _InvitePageState extends State<InvitePage> {
                       child: Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.08),
+                          color: AppColors.success.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(AppRadius.control),
-                          border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                          border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: <Widget>[

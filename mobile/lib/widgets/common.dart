@@ -160,9 +160,9 @@ class ErrorBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.danger.withOpacity(0.08),
+        color: AppColors.danger.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppRadius.control),
-        border: Border.all(color: AppColors.danger.withOpacity(0.35)),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: <Widget>[
@@ -222,9 +222,9 @@ class Tag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: tone.withOpacity(0.10),
+        color: tone.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: tone.withOpacity(0.28)),
+        border: Border.all(color: tone.withValues(alpha: 0.28)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -293,7 +293,7 @@ Future<void> showSavedCard(
                 Container(
                   width: 60,
                   height: 60,
-                  decoration: BoxDecoration(color: tone.withOpacity(0.12), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: tone.withValues(alpha: 0.12), shape: BoxShape.circle),
                   child: Icon(icon, color: tone, size: 32),
                 ),
                 const SizedBox(height: AppSpacing.md),

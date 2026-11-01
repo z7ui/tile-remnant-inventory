@@ -12,11 +12,12 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.tileremnant.app"
-    compileSdk = 35
-    // 本项目没有 C/C++ 源码，依赖的 .so 都是插件预编译好的，所以不必锁 NDK 版本。
-    // 保留 `ndkVersion = flutter.ndkVersion` 会让 AGP 强制下载 1GB+ 的 NDK 28.2；
-    // 若将来引入 native 代码，把它打开并先 sdkmanager "ndk;28.2.13676358"。
-    // ndkVersion = flutter.ndkVersion
+    // AGP 8.11 + androidx.core 1.17 要求 36；targetSdk 仍保持 35，不改变运行时行为
+    compileSdk = 36
+    // 本项目没有 C/C++ 源码，依赖的 .so 都是插件预编译好的。
+    // 但 AGP 8.11 仍会要一个 NDK（默认 27.0.12077973），本机没装就会去调已废弃的
+    // sdkmanager 自动下载然后失败。这里锁成已装的 28.2，跳过下载。
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

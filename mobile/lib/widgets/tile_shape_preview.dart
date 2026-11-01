@@ -33,10 +33,10 @@ class ShapePalette {
     return ShapePalette(
       stock: dark ? const Color(0xFF2A3138) : const Color(0xFFE8EDF3),
       stockBorder: dark ? const Color(0xFF4A5560) : const Color(0xFFB7C2CF),
-      demand: (dark ? AppColors.primaryDark : AppColors.primary).withOpacity(0.85),
+      demand: (dark ? AppColors.primaryDark : AppColors.primary).withValues(alpha: 0.85),
       demandBorder: dark ? AppColors.primaryDark : AppColors.primary,
-      remnant: (dark ? const Color(0xFFB39DDB) : AppColors.remnant).withOpacity(0.35),
-      hatch: dark ? const Color(0xFF6A1B9A).withOpacity(0.45) : AppColors.remnant.withOpacity(0.32),
+      remnant: (dark ? const Color(0xFFB39DDB) : AppColors.remnant).withValues(alpha: 0.35),
+      hatch: dark ? const Color(0xFF6A1B9A).withValues(alpha: 0.45) : AppColors.remnant.withValues(alpha: 0.32),
       cut: dark ? const Color(0xFFFFB74D) : AppColors.warning,
       label: dark ? AppColors.textDark : AppColors.textSecondary,
     );

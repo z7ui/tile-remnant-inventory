@@ -337,7 +337,7 @@ class _Chain extends StatelessWidget {
               width: 108,
               padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
-                color: current ? AppColors.accent(context).withOpacity(0.10) : AppColors.card(context),
+                color: current ? AppColors.accent(context).withValues(alpha: 0.10) : AppColors.card(context),
                 borderRadius: BorderRadius.circular(AppRadius.control),
                 border: Border.all(
                   color: current ? AppColors.accent(context) : AppColors.line(context),

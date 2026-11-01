@@ -253,9 +253,9 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.08),
+                        color: AppColors.success.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(AppRadius.control),
-                        border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: <Widget>[
@@ -343,9 +343,9 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                         child: Container(
                           padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
-                            color: AppColors.warning.withOpacity(0.08),
+                            color: AppColors.warning.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(AppRadius.control),
-                            border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                            border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
                           ),
                           child: Text(
                             '余料最小边小于项目阈值（${widget.api.project.minUsableMm}mm），入库后可能不好再利用，仍可强制入库。',
@@ -512,7 +512,7 @@ class _RemnantOptionCard extends StatelessWidget {
                   if (label == '丢弃')
                     Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(color: AppColors.card(context).withOpacity(0.85), shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: AppColors.card(context).withValues(alpha: 0.85), shape: BoxShape.circle),
                       child: Icon(icon, color: color, size: 22),
                     ),
                 ],

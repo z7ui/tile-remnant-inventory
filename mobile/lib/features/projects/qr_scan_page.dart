@@ -92,7 +92,7 @@ class _QrScanPageState extends State<QrScanPage> {
                 const SizedBox(height: 6),
                 Text(
                   '二维码只包含邀请码与服务器地址',
-                  style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 12.5),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 12.5),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 TextButton(

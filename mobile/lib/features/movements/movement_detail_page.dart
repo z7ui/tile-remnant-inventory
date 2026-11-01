@@ -62,9 +62,9 @@ class MovementDetailPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
+              color: color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppRadius.card),
-              border: Border.all(color: color.withOpacity(0.28)),
+              border: Border.all(color: color.withValues(alpha: 0.28)),
             ),
             child: Row(
               children: <Widget>[

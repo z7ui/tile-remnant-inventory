@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/app_theme.dart';
 import '../../core/config.dart';
@@ -24,6 +25,64 @@ class _AboutPageState extends State<AboutPage> {
   String? _serverEnv;
   String? _serverError;
   int? _latencyMs;
+
+  bool _checkingUpdate = false;
+  Map<String, dynamic>? _latest;
+  String? _updateError;
+
+  /// 服务端清单里的 versionCode 比自己大，才算有新版本。
+  bool get _hasUpdate {
+    final Map<String, dynamic>? info = _latest;
+    if (info == null) return false;
+    final int remote = (info['versionCode'] as num?)?.toInt() ?? 0;
+    return remote > AppConfig.buildNumber;
+  }
+
+  String _fmtSize(Object? bytes) {
+    final int? value = (bytes as num?)?.toInt();
+    if (value == null || value <= 0) return '';
+    final double mb = value / 1024 / 1024;
+    return '${mb.toStringAsFixed(1)} MB';
+  }
+
+  Future<void> _checkUpdate() async {
+    setState(() {
+      _checkingUpdate = true;
+      _updateError = null;
+    });
+    try {
+      final Session session = SessionScope.of(context);
+      // 版本清单是服务器上的静态文件（/tile-api/apk/version.json），不经过后端。
+      final dynamic json = await session.api.get('/apk/version.json');
+      if (!mounted) return;
+      setState(() {
+        _latest = Map<String, dynamic>.from(json as Map);
+        _checkingUpdate = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _updateError = errorMessage(error);
+        _checkingUpdate = false;
+      });
+    }
+  }
+
+  Future<void> _downloadUpdate() async {
+    final Object? raw = _latest?['apk_url'];
+    if (raw is! String || raw.isEmpty) {
+      showSnack(context, '清单里没有下载地址', error: true);
+      return;
+    }
+    final Uri uri = Uri.parse(raw);
+    // 交给系统浏览器：它会先下载到「下载」目录，点通知即可安装。
+    // 不在应用内自建下载器——省掉存储权限、断点续传、Android 7+ 的 FileProvider
+    // 和 targetSdk 35 的「安装未知应用」授权弹窗。
+    final bool ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      showSnack(context, '没有可用的浏览器打开下载链接', error: true);
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -81,7 +140,7 @@ class _AboutPageState extends State<AboutPage> {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.10),
+                      color: AppColors.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: const Icon(Icons.grid_view_rounded, size: 38, color: AppColors.primary),
@@ -133,6 +192,48 @@ class _AboutPageState extends State<AboutPage> {
                 icon: const Icon(Icons.refresh, size: 18),
                 label: const Text('重新检测'),
               ),
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+            const SectionTitle(title: '版本更新', subtitle: '安装包放在你自己的服务器上，不经过第三方'),
+            _InfoCard(
+              rows: <Widget>[
+                _Row(label: '当前版本', value: 'v${AppConfig.appVersion}（构建 ${AppConfig.buildNumber}）'),
+                if (_latest != null)
+                  _Row(
+                    label: '服务器',
+                    value: _hasUpdate
+                        ? '发现新版本 v${_latest!['version'] ?? '?'}'
+                            '${_fmtSize(_latest!['size']).isEmpty ? '' : ' · ${_fmtSize(_latest!['size'])}'}'
+                        : '已是最新版本',
+                    valueColor: _hasUpdate ? AppColors.primary : AppColors.success,
+                  ),
+                if (_updateError != null)
+                  _Row(label: '检查失败', value: _updateError!, valueColor: AppColors.danger),
+                if (_hasUpdate && (_latest!['notes']?.toString().trim().isNotEmpty ?? false))
+                  _Row(label: '更新内容', value: _latest!['notes'].toString()),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                TextButton.icon(
+                  onPressed: _checkingUpdate ? null : _checkUpdate,
+                  icon: _checkingUpdate
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.system_update_alt, size: 18),
+                  label: Text(_checkingUpdate ? '检查中…' : '检查更新'),
+                ),
+                if (_hasUpdate) ...<Widget>[
+                  const SizedBox(width: AppSpacing.sm),
+                  FilledButton.icon(
+                    onPressed: _downloadUpdate,
+                    icon: const Icon(Icons.download, size: 18),
+                    label: const Text('下载安装'),
+                  ),
+                ],
+              ],
             ),
 
             const SizedBox(height: AppSpacing.md),

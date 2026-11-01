@@ -489,7 +489,7 @@ class _Overview extends StatelessWidget {
         gradient: LinearGradient(
           colors: <Color>[
             AppColors.accent(context),
-            AppColors.accent(context).withOpacity(0.82),
+            AppColors.accent(context).withValues(alpha: 0.82),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -550,7 +550,7 @@ class _Stat extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(color: Colors.white.withOpacity(0.86), fontSize: 11.5)),
+          Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.86), fontSize: 11.5)),
         ],
       ),
     );
@@ -564,7 +564,7 @@ class _Divider extends StatelessWidget {
       width: 1,
       height: 28,
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-      color: Colors.white.withOpacity(0.25),
+      color: Colors.white.withValues(alpha: 0.25),
     );
   }
 }

@@ -232,9 +232,9 @@ class _MatchPageState extends State<MatchPage> {
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: (shortage ? AppColors.warning : AppColors.success).withOpacity(0.08),
+            color: (shortage ? AppColors.warning : AppColors.success).withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(AppRadius.control),
-            border: Border.all(color: (shortage ? AppColors.warning : AppColors.success).withOpacity(0.32)),
+            border: Border.all(color: (shortage ? AppColors.warning : AppColors.success).withValues(alpha: 0.32)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,

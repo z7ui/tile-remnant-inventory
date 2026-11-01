@@ -1,7 +1,7 @@
 name: tile_remnant
 description: 装修瓷砖余料库存与匹配管理（Android）
 publish_to: "none"
-version: 0.1.5+6
+version: 0.1.6+7
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -16,6 +16,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   qr_flutter: ^4.1.0
   mobile_scanner: ^5.2.3
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:
