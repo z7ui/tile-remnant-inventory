@@ -250,7 +250,16 @@ class _AboutPageState extends State<AboutPage> {
             _InfoCard(
               rows: <Widget>[
                 _Row(label: '开源协议', value: 'GPL-3.0'),
-                _Row(label: '源码', value: 'github.com/z7ui/tile-remnant-inventory', mono: true, selectable: true),
+                _LinkRow(
+                  label: '源码',
+                  text: 'github.com/z7ui/tile-remnant-inventory',
+                  url: 'https://github.com/z7ui/tile-remnant-inventory',
+                ),
+                _LinkRow(
+                  label: '博客',
+                  text: 'www.z7ui.cn',
+                  url: 'https://www.z7ui.cn/',
+                ),
               ],
             ),
 
@@ -324,6 +333,60 @@ class _Row extends StatelessWidget {
                 : Text(value, style: style),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 可点击的外链行：整行可点，右侧有「在浏览器中打开」的图标。
+/// 之前只是可复制的文本，用户还得手动复制到浏览器地址栏。
+class _LinkRow extends StatelessWidget {
+  const _LinkRow({required this.label, required this.text, required this.url});
+
+  final String label;
+  final String text;
+  final String url;
+
+  Future<void> _open(BuildContext context) async {
+    final bool ok = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    if (!ok && context.mounted) {
+      showSnack(context, '没有可用的浏览器打开这个链接', error: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => _open(context),
+      borderRadius: BorderRadius.circular(AppRadius.control),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            SizedBox(
+              width: 76,
+              child: Text(label, style: TextStyle(fontSize: 12.5, color: AppColors.sub(context))),
+            ),
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.35,
+                  color: AppColors.primary,
+                  decoration: TextDecoration.underline,
+                  decorationColor: AppColors.primary.withValues(alpha: 0.4),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Padding(
+              padding: EdgeInsets.only(top: 1),
+              child: Icon(Icons.open_in_new, size: 15, color: AppColors.primary),
+            ),
+          ],
+        ),
       ),
     );
   }
