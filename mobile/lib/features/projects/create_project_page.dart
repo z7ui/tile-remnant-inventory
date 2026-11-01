@@ -91,21 +91,30 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
     }
   }
 
+  /// 失败统一走这里：既写进页内 banner，也弹一次底部提示。
+  /// 光靠 banner 不够——它在 ListView 中间，用户停在按钮那一屏时根本看不到，
+  /// 体感就是「点了没反应」。
+  void _fail(String message, {bool focusName = false}) {
+    setState(() => _formError = message);
+    if (focusName) _nameFocus.requestFocus();
+    showSnack(context, message, error: true);
+  }
+
   Future<void> _submit() async {
     final String name = _name.text.trim();
     if (name.length < 2) {
-      setState(() => _formError = '请填写项目名称（至少 2 个字符）');
+      _fail('请填写项目名称（至少 2 个字符）', focusName: true);
       return;
     }
     if (_nameError != null) {
       // 这里曾经是静默 return：按钮点了毫无反应，用户根本不知道卡在哪。
-      setState(() => _formError = _nameError);
+      _fail(_nameError!);
       return;
     }
 
     final int? minUsable = int.tryParse(_minUsable.text.trim());
     if (minUsable == null || minUsable < 0 || minUsable > 5000) {
-      setState(() => _formError = '最小可用尺寸需为 0–5000mm 的整数');
+      _fail('最小可用尺寸需为 0–5000mm 的整数');
       return;
     }
 
@@ -131,9 +140,11 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _formError = errorMessage(error);
-        _nameError = error is ApiException && error.code == 'project_name_taken' ? error.message : _nameError;
+        if (error is ApiException && error.code == 'project_name_taken') {
+          _nameError = error.message;
+        }
       });
+      _fail(errorMessage(error));
     }
   }
 

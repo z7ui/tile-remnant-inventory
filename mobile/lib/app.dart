@@ -42,6 +42,7 @@ class _TileRemnantAppState extends State<TileRemnantApp> {
 
   @override
   Widget build(BuildContext context) {
+    final Session? session = _session;
     return MaterialApp(
       title: '余砖管家',
       debugShowCheckedModeBanner: false,
@@ -49,6 +50,16 @@ class _TileRemnantAppState extends State<TileRemnantApp> {
       // 只做浅色：工地上强光下深色界面对比度反而更差，而且两套配色等于双倍走查成本。
       // 这里不挂 darkTheme，系统切到深色时 App 仍是浅色。
       themeMode: ThemeMode.light,
+      // SessionScope 必须挂在 Navigator **之上**。
+      // 原来它只包住 ProjectListPage，而所有 Navigator.push 出来的页面
+      // （新建项目、关于、项目详情…）都在 Navigator 下、SessionScope 外，
+      // 一调用 SessionScope.of(context) 就抛异常。
+      // 现象就是：点按钮毫无反应、请求一条都没发出去。
+      builder: (BuildContext context, Widget? child) {
+        final Widget body = child ?? const SizedBox.shrink();
+        if (session == null) return body;
+        return SessionScope(session: session, child: body);
+      },
       home: _buildHome(),
     );
   }
@@ -58,10 +69,7 @@ class _TileRemnantAppState extends State<TileRemnantApp> {
     if (session == null) {
       return _BootScreen(error: _fatalError, onRetry: _boot);
     }
-    return SessionScope(
-      session: session,
-      child: const ProjectListPage(),
-    );
+    return const ProjectListPage();
   }
 }
 
