@@ -4,12 +4,13 @@ import '../../core/models.dart';
 import '../../core/project_api.dart';
 import '../../core/session.dart';
 import '../../core/session_scope.dart';
+import '../inventory/inventory_form_page.dart';
 import '../inventory/inventory_page.dart';
 import '../match/match_page.dart';
 import '../movements/movements_page.dart';
 import '../settings/project_settings_page.dart';
 
-/// Bottom navigation shell: 库存 / 匹配 / 流水 / 项目.
+/// Bottom navigation shell: 库存 / 匹配 / 录入 / 流水 / 项目.
 class ProjectShellPage extends StatefulWidget {
   const ProjectShellPage({super.key, required this.project});
 
@@ -73,15 +74,34 @@ class _ProjectShellPageState extends State<ProjectShellPage> {
     return Scaffold(
       body: IndexedStack(index: _index, children: pages),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _index,
-        onTap: (int index) => setState(() => _index = index),
+        // pages 只有 4 个（库存/匹配/流水/项目），导航栏是 5 个：中间多一个「录入」。
+        // 「录入」是动作不是常驻页，所以它不参与 currentIndex，点它直接推表单。
+        currentIndex: _index < _entrySlot ? _index : _index + 1,
+        onTap: (int slot) {
+          if (slot == _entrySlot) {
+            _openEntryForm();
+            return;
+          }
+          setState(() => _index = slot > _entrySlot ? slot - 1 : slot);
+        },
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.inventory_2_outlined), activeIcon: Icon(Icons.inventory_2), label: '库存'),
           BottomNavigationBarItem(icon: Icon(Icons.search_outlined), activeIcon: Icon(Icons.search), label: '匹配'),
+          BottomNavigationBarItem(icon: Icon(Icons.add_box_outlined), activeIcon: Icon(Icons.add_box), label: '录入'),
           BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), activeIcon: Icon(Icons.receipt_long), label: '流水'),
           BottomNavigationBarItem(icon: Icon(Icons.folder_outlined), activeIcon: Icon(Icons.folder), label: '项目'),
         ],
       ),
     );
+  }
+
+  /// 「录入」在导航栏里的位置（0 库存 / 1 匹配 / 2 录入 / 3 流水 / 4 项目）。
+  static const int _entrySlot = 2;
+
+  Future<void> _openEntryForm() async {
+    final bool? created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(builder: (_) => InventoryFormPage(api: _api)),
+    );
+    if (created == true && mounted) _bumpReload();
   }
 }

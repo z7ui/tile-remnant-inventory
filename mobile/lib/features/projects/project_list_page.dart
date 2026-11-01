@@ -11,6 +11,7 @@ import '../home/project_shell_page.dart';
 import '../projects/create_project_page.dart';
 import '../projects/join_project_page.dart';
 import '../projects/qr_scan_page.dart';
+import '../settings/about_page.dart';
 import '../settings/server_setup_page.dart';
 
 class ProjectListPage extends StatefulWidget {
@@ -110,6 +111,13 @@ class _ProjectListPageState extends State<ProjectListPage> {
         context,
         '余砖管家',
         actions: <Widget>[
+          IconButton(
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(builder: (_) => const AboutPage()),
+            ),
+            tooltip: '关于',
+            icon: const Icon(Icons.info_outline),
+          ),
           // release 包里地址写死在安装包内，这个入口只在 debug 构建出现
           if (!AppConfig.serverLocked)
             IconButton(

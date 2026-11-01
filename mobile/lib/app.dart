@@ -46,8 +46,9 @@ class _TileRemnantAppState extends State<TileRemnantApp> {
       title: '余砖管家',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(Brightness.light),
-      darkTheme: buildAppTheme(Brightness.dark),
-      themeMode: ThemeMode.system,
+      // 只做浅色：工地上强光下深色界面对比度反而更差，而且两套配色等于双倍走查成本。
+      // 这里不挂 darkTheme，系统切到深色时 App 仍是浅色。
+      themeMode: ThemeMode.light,
       home: _buildHome(),
     );
   }

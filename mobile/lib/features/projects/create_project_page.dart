@@ -58,9 +58,10 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
     final String value = _name.text.trim();
     if (value.length < 2) return;
     if (_lastChecked == value) return;
-    final Session session = SessionScope.of(context);
+    if (!mounted) return;
     setState(() => _checking = true);
     try {
+      final Session session = SessionScope.of(context);
       final dynamic json = await session.api.get(
         '/api/projects/name-available',
         query: <String, String>{'name': value},
@@ -75,11 +76,18 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
       });
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() => _checking = false);
-      if (e.isNetwork) {
-        // offline: let the server reject on submit
-        return;
-      }
+      setState(() {
+        _checking = false;
+        // 断网时不要拦住提交：让最终的服务端请求去报错，那里文案更准确。
+        // 其它错误（401/403/500）也不能静默吞掉，否则用户只会看到「按钮没反应」。
+        if (!e.isNetwork) _formError = '名称预检查失败（${e.message}），可直接点「创建项目」重试。';
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _checking = false;
+        _formError = '名称预检查失败（$error），可直接点「创建项目」重试。';
+      });
     }
   }
 
@@ -89,7 +97,11 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
       setState(() => _formError = '请填写项目名称（至少 2 个字符）');
       return;
     }
-    if (_nameError != null) return;
+    if (_nameError != null) {
+      // 这里曾经是静默 return：按钮点了毫无反应，用户根本不知道卡在哪。
+      setState(() => _formError = _nameError);
+      return;
+    }
 
     final int? minUsable = int.tryParse(_minUsable.text.trim());
     if (minUsable == null || minUsable < 0 || minUsable > 5000) {
