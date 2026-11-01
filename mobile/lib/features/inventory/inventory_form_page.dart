@@ -49,8 +49,9 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
     final Session session = SessionScope.of(context);
     _unit = session.prefs
         .unitFor(widget.api.project.id, widget.api.project.defaultUnit);
-    final String? last = session.prefs.lastLocation(widget.api.project.id);
-    if (last != null && last.isNotEmpty) _location.text = last;
+    // 位置不预填：每次进来都是空白。
+    // 想复用就点下方的历史位置 Chip，或者自己输。
+    // 只有「连续入库」在同一次录入里会保留上一块砖的位置。
   }
 
   @override
@@ -112,17 +113,9 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
         note: _note.text,
       );
       await session.prefs.setUnit(widget.api.project.id, _unit);
+      // 位置只在页面存活期间保留：连续入库时不清空输入框就够，
+      // 不需要写进偏好——跨会话记住位置反而会让人误以为已经填好。
       final String place = _location.text.trim();
-      if (stay) {
-        // 连续录入：这一摞砖基本都在同一处，记住它
-        if (place.isNotEmpty) {
-          await session.prefs.setLastLocation(widget.api.project.id, place);
-        }
-      } else {
-        // 「并返回」意味着这次录入收工了。清掉记忆，下次进来位置是空的——
-        // 否则标题下面挂着上次的地点，用户会以为已经填好，直接点确认就存错位置。
-        await session.prefs.setLastLocation(widget.api.project.id, '');
-      }
       if (!mounted) return;
 
       if (stay) {

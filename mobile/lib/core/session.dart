@@ -35,11 +35,6 @@ class UserPrefs {
 
   Future<void> setUnit(String projectId, String unit) => _prefs.setString('unit_$projectId', unit);
 
-  String? lastLocation(String projectId) => _prefs.getString('location_$projectId');
-
-  Future<void> setLastLocation(String projectId, String location) =>
-      _prefs.setString('location_$projectId', location);
-
   String cutOptionFor(String projectId) => _prefs.getString('cut_$projectId') ?? 'long_side_cut';
 
   /// 打开「关于」页时是否自动检查更新（默认开）。
