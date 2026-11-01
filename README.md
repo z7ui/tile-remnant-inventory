@@ -94,9 +94,29 @@ tile-remnant-inventory/
 │   ├── android/                  # Gradle 工程、清单、网络安全配置、图标
 │   ├── test/                     # formatters / invite payload / 图形组件
 │   └── tool/generate_icons.py    # 无依赖生成 launcher 图标
-├── deploy/nginx/tile-api.conf    # HTTPS、HSTS、限流、反代
-├── docs/                         # API、数据库、溯源、安全、部署、备份、博客文章
-├── scripts/                      # build_apk / publish_github / backup / restore / dev / wp_publish
+├── deploy/
+│   ├── nginx/tile-api.conf       # HTTPS、HSTS、限流、反代
+│   └── certs/                    # 证书占位（*.pem / *.key 已被 .gitignore 排除）
+├── docs/
+│   ├── api.md                    # 接口一览、错误码
+│   ├── database.md               # 表结构、索引、并发
+│   ├── trace.md                  # 溯源链设计
+│   ├── security.md               # 鉴权、限流、威胁模型
+│   ├── deployment.md             # systemd + nginx 部署（Docker 为可选）
+│   ├── backup-restore.md         # 备份与恢复
+│   ├── how-to-use.md             # 使用手册：装包到溯源，含构建与部署坑
+│   ├── DELIVERY-STATUS.md        # 交付状态、未执行项与阻塞原因
+│   ├── ui.md                     # UI 规范（颜色 token、组件规格、触控尺寸）
+│   ├── blog-post.md              # 发布用长文（HTML 由脚本生成，不入库）
+│   ├── release-notes-v0.1.0.md
+│   └── release-notes-v0.1.1.md
+├── scripts/
+│   ├── build_apk.sh              # 构建 release APK（含 JDK/签名处理）
+│   ├── publish_github.sh         # 建仓 + 推 + 发 Release
+│   ├── backup.sh                 # SQLite 安全备份（.backup，不 cp 在写的库）
+│   ├── restore.sh                # 从备份恢复
+│   ├── dev_backend.sh            # 本地起后端（自动建表）
+│   └── wp_publish.py             # Markdown → WordPress HTML（--dry-run / 直发）
 ├── docker-compose.yml
 ├── .env.example
 └── LICENSE                       # GPL-3.0

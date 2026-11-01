@@ -1,0 +1,5 @@
+# 证书放这里，但不要提交：
+#   fullchain.pem
+#   privkey.pem
+# 仓库根 .gitignore 已排除 *.pem / *.key / *.p12 / *.jks。
+# 签发方式见 docs/deployment.md（复用宿主机现有证书，或 acme.sh）。
