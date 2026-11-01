@@ -256,6 +256,74 @@ void showSnack(BuildContext context, String message, {bool error = false, SnackB
   );
 }
 
+/// 操作成功后的确认卡片：比 SnackBar 大得多，**点任意位置即关闭**，
+/// 也可以下拉关闭、点遮罩关闭。
+///
+/// 为什么不用 SnackBar：带 action 的 SnackBar 又矮又窄，点击内容区还关不掉，
+/// 用户得去点那个小按钮，在工地上单手操作很难命中。
+Future<void> showSavedCard(
+  BuildContext context, {
+  required String title,
+  String? subtitle,
+  IconData icon = Icons.check_circle,
+  Color? accent,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    barrierColor: const Color(0x33000000),
+    isDismissible: true,
+    enableDrag: true,
+    builder: (BuildContext sheetContext) {
+      final Color tone = accent ?? AppColors.success;
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => Navigator.of(sheetContext).pop(),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.card(sheetContext),
+              borderRadius: BorderRadius.circular(AppRadius.card),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(color: tone.withOpacity(0.12), shape: BoxShape.circle),
+                  child: Icon(icon, color: tone, size: 32),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, height: 1.3),
+                ),
+                if (subtitle != null && subtitle.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 6),
+                  Text(
+                    subtitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 13.5, height: 1.45, color: AppColors.sub(sheetContext)),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  '点击任意处关闭',
+                  style: TextStyle(fontSize: 12, color: AppColors.sub(sheetContext)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
 Future<bool> confirmDanger(
   BuildContext context, {
   required String title,

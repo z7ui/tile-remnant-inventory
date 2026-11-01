@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart' show kReleaseMode;
 class AppConfig {
   const AppConfig._();
 
-  static const String appVersion = '0.1.4';
+  static const String appVersion = '0.1.5';
 
   /// 服务器地址在**编译时**定死：
   ///   flutter build apk --dart-define=API_BASE_URL=https://www.z7ui.cn/tile-api

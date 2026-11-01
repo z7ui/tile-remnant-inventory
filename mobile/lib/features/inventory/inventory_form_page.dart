@@ -101,7 +101,13 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
         await session.prefs.setLastLocation(widget.api.project.id, _location.text.trim());
       }
       if (!mounted) return;
-      showSnack(context, '已入库 ${_pieces} 片', action: SnackBarAction(label: '好的', onPressed: () {}));
+      final String place = _location.text.trim();
+      await showSavedCard(
+        context,
+        title: '已入库 $_pieces 片',
+        subtitle: '${formatSize(_widthMm ?? 0, _lengthMm ?? 0, _unit)}${place.isEmpty ? '' : ' · $place'}',
+      );
+      if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (error) {
       if (!mounted) return;
