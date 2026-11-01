@@ -65,7 +65,7 @@ class _ServerSetupPageState extends State<ServerSetupPage> {
               Text('数据存放在你自己的博客云主机上', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                '填写后端 API 的 HTTPS 域名。为保护数据，只接受 HTTPS；http 仅用于本机调试（localhost / 10.0.2.2）。',
+                '填写服务器地址（HTTPS 域名）。为保护数据只接受 HTTPS；http 仅用于本机调试。',
                 style: TextStyle(fontSize: 13.5, height: 1.45, color: AppColors.sub(context)),
               ),
               const SizedBox(height: AppSpacing.lg),

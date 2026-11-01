@@ -28,7 +28,7 @@ int? parseLengthToMm(String raw, String unit) {
 String? validateLength(String raw, String unit) {
   if (raw.trim().isEmpty) return '请输入尺寸';
   if (parseLengthToMm(raw, unit) == null) {
-    return '尺寸格式不正确，可输入 800 / 80cm / 800mm';
+    return '尺寸需为数字，例如 800 或 80.5';
   }
   return null;
 }

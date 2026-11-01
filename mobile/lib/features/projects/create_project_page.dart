@@ -194,7 +194,7 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    '录入时只输入数字就按此单位解析；也可直接输入 80cm / 800mm。',
+                    '录入时只填数字，按这里选的单位解析。',
                     style: TextStyle(fontSize: 12.5, color: AppColors.sub(context)),
                   ),
                   const SizedBox(height: AppSpacing.lg),

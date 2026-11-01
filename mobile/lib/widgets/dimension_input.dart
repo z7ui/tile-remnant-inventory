@@ -71,7 +71,7 @@ class DimensionInput extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
-                '可直接输入 800 / 80cm / 800mm',
+                '只填数字，单位用左边的 mm / cm 切换',
                 style: TextStyle(fontSize: 12.5, color: AppColors.sub(context)),
                 maxLines: 2,
               ),

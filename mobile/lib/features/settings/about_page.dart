@@ -162,10 +162,10 @@ class _AboutPageState extends State<AboutPage> {
             ),
             const SizedBox(height: AppSpacing.xl),
 
-            const SectionTitle(title: '服务器', subtitle: '地址随安装包固定，界面上无法修改'),
+            const SectionTitle(title: '数据服务器', subtitle: '库存和流水都存在这里'),
             _InfoCard(
               rows: <Widget>[
-                _Row(label: '地址', value: AppConfig.defaultBaseUrl, mono: true, selectable: true),
+                _Row(label: '服务地址', value: AppConfig.defaultBaseUrl, mono: true, selectable: true),
                 _Row(
                   label: '状态',
                   value: _checking
@@ -179,7 +179,7 @@ class _AboutPageState extends State<AboutPage> {
                 ),
                 if (_serverVersion != null)
                   _Row(
-                    label: '后端版本',
+                    label: '服务版本',
                     value: 'v$_serverVersion${_serverEnv != null ? ' · $_serverEnv' : ''}',
                   ),
               ],
@@ -195,13 +195,13 @@ class _AboutPageState extends State<AboutPage> {
             ),
 
             const SizedBox(height: AppSpacing.md),
-            const SectionTitle(title: '版本更新', subtitle: '安装包放在你自己的服务器上，不经过第三方'),
+            const SectionTitle(title: '版本更新', subtitle: '新版本从工地服务器直接下载'),
             _InfoCard(
               rows: <Widget>[
                 _Row(label: '当前版本', value: 'v${AppConfig.appVersion}（构建 ${AppConfig.buildNumber}）'),
                 if (_latest != null)
                   _Row(
-                    label: '服务器',
+                    label: '线上版本',
                     value: _hasUpdate
                         ? '发现新版本 v${_latest!['version'] ?? '?'}'
                             '${_fmtSize(_latest!['size']).isEmpty ? '' : ' · ${_fmtSize(_latest!['size'])}'}'
@@ -237,11 +237,11 @@ class _AboutPageState extends State<AboutPage> {
             ),
 
             const SizedBox(height: AppSpacing.md),
-            const SectionTitle(title: '本机设备', subtitle: '没有账号，设备身份就是凭证'),
+            const SectionTitle(title: '本机身份', subtitle: '不需要注册账号'),
             _InfoCard(
               rows: <Widget>[
-                _Row(label: '设备 ID', value: shortId, mono: true, selectable: true),
-                const _Row(label: '说明', value: '长按可复制。联系技术支持时提供它便于定位。'),
+                _Row(label: '本机编号', value: shortId, mono: true, selectable: true),
+                const _Row(label: '说明', value: '长按可复制。遇到问题时把这串编号发给管理员，方便定位。'),
               ],
             ),
 
@@ -249,15 +249,14 @@ class _AboutPageState extends State<AboutPage> {
             const SectionTitle(title: '其它'),
             _InfoCard(
               rows: <Widget>[
-                _Row(label: '协议', value: 'GPL-3.0'),
+                _Row(label: '开源协议', value: 'GPL-3.0'),
                 _Row(label: '源码', value: 'github.com/z7ui/tile-remnant-inventory', mono: true, selectable: true),
-                _Row(label: '技术栈', value: 'Flutter · FastAPI · SQLite'),
               ],
             ),
 
             const SizedBox(height: AppSpacing.lg),
             Text(
-              '余料入库、切割记账、溯源查询都在本地服务器上完成，本 App 不上传任何第三方数据。',
+              '库存、流水和溯源记录都保存在工地的服务器上，不会上传到任何第三方。',
               style: TextStyle(fontSize: 12, height: 1.5, color: AppColors.sub(context)),
             ),
             const SizedBox(height: AppSpacing.lg),

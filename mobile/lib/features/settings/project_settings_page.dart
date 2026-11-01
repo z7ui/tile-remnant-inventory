@@ -81,7 +81,7 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
     final bool ok = await confirmDanger(
       context,
       title: '删除项目？',
-      message: '项目将被软删除，所有成员设备立即失去访问权限。库存与流水仍保留在数据库中，但 App 内不再显示。',
+      message: '删除后，所有成员将无法再进入这个项目。库存与流水记录会保留，但 App 里不再显示。',
       confirmLabel: '删除项目',
     );
     if (!ok || !mounted) return;
