@@ -46,8 +46,6 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
 
   CutOptionPreview? get _preview => widget.candidate.previewFor(_cutOption);
 
-  Remnant? get _remnant => _preview?.remnant;
-
   @override
   void initState() {
     super.initState();

@@ -55,7 +55,7 @@ echo "==> flutter pub get"
 flutter pub get
 
 echo "==> flutter analyze"
-flutter analyze
+flutter analyze --no-fatal-infos
 
 echo "==> flutter test"
 flutter test

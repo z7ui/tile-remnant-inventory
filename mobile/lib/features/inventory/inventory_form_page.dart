@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
-import '../../core/models.dart';
 import '../../core/project_api.dart';
 import '../../core/session.dart';
 import '../../core/session_scope.dart';
