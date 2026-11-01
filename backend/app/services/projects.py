@@ -130,9 +130,10 @@ def check_name_available(db: Session, name: str, exclude_project_id: str | None 
         "name": normalise_project_name(name),
         "key": key,
         "available": available,
-        "conflict_project": None
-        if available
-        else {"id": existing.id, "name": existing.name, "created_at": iso(existing.created_at)},
+        # 故意不回传冲突项目的信息。
+        # 这个接口只要注册一个设备就能调（注册是公开的，不需要邀请码），
+        # 而项目名往往就是「金域蓝湾 3 栋 1802」这种工地门牌——
+        # 回传 id/name/created_at 等于告诉陌生人「某工地/某住户正在用」。
     }
 
 
@@ -148,7 +149,7 @@ def create_project(db: Session, device: Device, payload: ProjectCreateIn, ip: st
             409,
             "project_name_taken",
             f"项目名称「{name}」已被占用（不区分大小写、忽略首尾空格），请换一个名称。",
-            {"conflict_project_id": existing.id, "conflict_project_name": existing.name},
+            # 同上：只说「重名了」，不说重的是谁。
         )
 
     project = Project(
