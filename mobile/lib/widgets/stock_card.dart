@@ -93,7 +93,13 @@ class StockCard extends StatelessWidget {
                               Tag(
                                 label:
                                     batch.sourceType == 'cut' ? '切割余料' : '原始录入',
-                                color: AppColors.sub(context),
+                                // 来源也用颜色区分：原始录入蓝、切割余料绿
+                                color: batch.sourceType == 'cut'
+                                    ? AppColors.success
+                                    : AppColors.primary,
+                                icon: batch.sourceType == 'cut'
+                                    ? Icons.content_cut
+                                    : Icons.add_box_outlined,
                               ),
                             ],
                           ),
@@ -214,9 +220,12 @@ class _ThumbPainter extends CustomPainter {
     final double oy = (size.height - h) / 2;
 
     final Paint fill = Paint()
-      ..color = batch.isLShape
-          ? (dark ? const Color(0xFF4A3560) : const Color(0xFFEDE4F5))
-          : (dark ? const Color(0xFF2F3740) : const Color(0xFFE8EDF3));
+      ..color = batch.isIrregular
+          // 异形用橙黄（对应 AppColors.warning），和标签颜色一致
+          ? (dark ? const Color(0xFF5A3A1A) : const Color(0xFFFBE3CE))
+          : batch.isLShape
+              ? (dark ? const Color(0xFF4A3560) : const Color(0xFFEDE4F5))
+              : (dark ? const Color(0xFF2F3740) : const Color(0xFFE8EDF3));
     final Paint border = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1

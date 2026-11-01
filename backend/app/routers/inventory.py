@@ -21,7 +21,7 @@ router = APIRouter(prefix="/projects/{project_id}/inventory", tags=["inventory"]
 def inventory_filters(
     q: str | None = Query(default=None, max_length=80),
     batch_id: str | None = Query(default=None, max_length=40),
-    shape_type: Literal["rectangle", "l_shape"] | None = None,
+    shape_type: Literal["rectangle", "l_shape", "irregular"] | None = None,
     source_type: Literal["manual", "cut"] | None = None,
     location: str | None = Query(default=None, max_length=120),
     status: Literal["available", "depleted", "void"] | None = None,
