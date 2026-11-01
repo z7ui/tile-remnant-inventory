@@ -1,7 +1,7 @@
 name: tile_remnant
 description: 装修瓷砖余料库存与匹配管理（Android）
 publish_to: "none"
-version: 0.1.23+24
+version: 0.1.24+25
 
 environment:
   sdk: ">=3.4.0 <4.0.0"

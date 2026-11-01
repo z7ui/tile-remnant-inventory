@@ -52,6 +52,8 @@ class TileShapePreview extends StatelessWidget {
     required this.heightMm,
     this.rects = const <ShapeRect>[],
     this.demand,
+    this.demandCount = 1,
+    this.demandAlongY = false,
     this.remnantMode = false,
     this.showCutLines = false,
     this.height = 160,
@@ -64,6 +66,8 @@ class TileShapePreview extends StatelessWidget {
   final int heightMm;
   final List<ShapeRect> rects;
   final ShapeRect? demand;
+  final int demandCount;
+  final bool demandAlongY;
   final bool remnantMode;
   final bool showCutLines;
   final double height;
@@ -91,6 +95,8 @@ class TileShapePreview extends StatelessWidget {
                 heightMm: heightMm,
                 rects: region,
                 demand: demand,
+                demandCount: demandCount,
+                demandAlongY: demandAlongY,
                 remnantMode: remnantMode,
                 showCutLines: showCutLines,
                 showDimensions: showDimensions,
@@ -107,7 +113,10 @@ class TileShapePreview extends StatelessWidget {
             runSpacing: AppSpacing.xs,
             children: <Widget>[
               _LegendDot(color: palette.stock, label: '原砖'),
-              if (demand != null) _LegendDot(color: palette.demand, label: '本次需求'),
+              if (demand != null)
+                _LegendDot(
+                    color: palette.demand,
+                    label: demandCount > 1 ? '本次需求 × $demandCount' : '本次需求'),
               if (remnantMode || showCutLines) _LegendDot(color: palette.remnant, label: '切后余料'),
               if (remnantMode) _LegendDot(color: palette.hatch, label: '缺口/不可用'),
             ],
@@ -159,6 +168,8 @@ class _TileShapePainter extends CustomPainter {
     required this.heightMm,
     required this.rects,
     required this.demand,
+    required this.demandCount,
+    required this.demandAlongY,
     required this.remnantMode,
     required this.showCutLines,
     required this.showDimensions,
@@ -169,6 +180,8 @@ class _TileShapePainter extends CustomPainter {
   final int heightMm;
   final List<ShapeRect> rects;
   final ShapeRect? demand;
+  final int demandCount;
+  final bool demandAlongY;
   final bool remnantMode;
   final bool showCutLines;
   final bool showDimensions;
@@ -241,21 +254,41 @@ class _TileShapePainter extends CustomPainter {
     // 4. demand block + cut lines
     final ShapeRect? d = demand;
     if (d != null) {
-      final Rect rect = rectOf(d);
-      canvas.drawRect(rect, Paint()..color = palette.demand);
-      canvas.drawRect(
-        rect,
-        Paint()
-          ..color = palette.demandBorder
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
-      );
-      if (showCutLines) {
-        _dashedLine(canvas, Offset(rect.right, bbox.top), Offset(rect.right, bbox.bottom));
-        _dashedLine(canvas, Offset(bbox.left, rect.top), Offset(bbox.right, rect.top));
-      }
-      if (rect.width > 46 && rect.height > 22) {
-        _text(canvas, '需求', rect.center, Colors.white, 11, bold: true);
+      final int n = demandCount <= 0 ? 1 : demandCount;
+      for (int i = 0; i < n; i++) {
+        // 多片需求沿切割方向平移：long_side_cut 沿长边(y)堆叠，short_side_cut 沿短边(x)排开
+        final ShapeRect piece = ShapeRect(
+          x: d.x + (demandAlongY ? 0 : i * d.w),
+          y: d.y + (demandAlongY ? i * d.h : 0),
+          w: d.w,
+          h: d.h,
+        );
+        final Rect rect = rectOf(piece);
+        canvas.drawRect(rect, Paint()..color = palette.demand);
+        canvas.drawRect(
+          rect,
+          Paint()
+            ..color = palette.demandBorder
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2,
+        );
+        if (showCutLines) {
+          if (n == 1) {
+            // 单片：沿需求块右边、上边画两条切缝
+            _dashedLine(canvas, Offset(rect.right, bbox.top), Offset(rect.right, bbox.bottom));
+            _dashedLine(canvas, Offset(bbox.left, rect.top), Offset(bbox.right, rect.top));
+          } else if (i < n - 1) {
+            // 多片：片与片之间画分界线
+            if (demandAlongY) {
+              _dashedLine(canvas, Offset(bbox.left, rect.bottom), Offset(bbox.right, rect.bottom));
+            } else {
+              _dashedLine(canvas, Offset(rect.right, bbox.top), Offset(rect.right, bbox.bottom));
+            }
+          }
+        }
+        if (rect.width > 46 && rect.height > 22) {
+          _text(canvas, n > 1 ? '${i + 1}' : '需求', rect.center, Colors.white, 11, bold: true);
+        }
       }
     }
 
@@ -305,6 +338,8 @@ class _TileShapePainter extends CustomPainter {
     return old.widthMm != widthMm ||
         old.heightMm != heightMm ||
         old.demand != demand ||
+        old.demandCount != demandCount ||
+        old.demandAlongY != demandAlongY ||
         old.remnantMode != remnantMode ||
         old.showCutLines != showCutLines ||
         old.rects != rects ||

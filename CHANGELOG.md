@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.24] - 2026-11-02
+
+### Fixed
+
+#### 移动端（Flutter）
+- 匹配结果页与确认使用页的图例：当一块余料能切出多片需求时，之前只画一片蓝色需求块，
+  与实际「可切 N 片」不符；现在按实际片数画出多个需求块（标序号），图例显示「本次需求 × N」。
+
 ## [0.1.23] - 2026-11-01
 
 ### Added

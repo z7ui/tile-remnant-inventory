@@ -253,6 +253,8 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                       heightMm: _batch.heightMm,
                       rects: _batch.rects,
                       demand: preview.placement,
+                      demandCount: widget.quantity,
+                      demandAlongY: _cutOption == 'long_side_cut',
                       remnantMode: true,
                       showCutLines: true,
                       height: 220,
