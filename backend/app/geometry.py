@@ -435,15 +435,24 @@ def pieces_available(
     demand_short: int,
     demand_long: int,
     cap: int,
+    option: CutOption | None = None,
 ) -> int:
-    """How many demand pieces can be cut out of one physical tile (simulated)."""
+    """How many demand pieces can be cut out of one physical tile (simulated).
+
+    ``option`` 固定为单一方向时，模拟只沿该方向连切；为 ``None`` 时 long 优先、
+    short 兜底（用于估算上限）。分配时的 ``cut_option`` 是单一方向，所以估算可用
+    片数必须用同一个方向，否则会出现「说能切 10 片、实际某方向只切得出 8 片」。
+    """
     count = 0
     cur: list[Rect] = list(region)
     cw, ch = width, height
     while count < cap:
-        plan = plan_cut(cur, cw, ch, demand_short, demand_long, "long_side_cut") or plan_cut(
-            cur, cw, ch, demand_short, demand_long, "short_side_cut"
-        )
+        if option is not None:
+            plan = plan_cut(cur, cw, ch, demand_short, demand_long, option)
+        else:
+            plan = plan_cut(cur, cw, ch, demand_short, demand_long, "long_side_cut") or plan_cut(
+                cur, cw, ch, demand_short, demand_long, "short_side_cut"
+            )
         if plan is None:
             break
         count += 1

@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.25] - 2026-11-02
+
+### Fixed
+
+#### 后端
+- 匹配时「可切几片」改用单一方向估算，与分配的切割方式一致。之前用「长边优先、短边兜底」的混合
+  算法估算，会出现「说能切 10 片、实际某个方向只切得出 8 片」，确认使用时报「无法切出」。
+- 确认使用页的「尺寸与面积对比」按实际片数计算：本次需求面积 = 单片 × 片数，
+  切后余料面积 = 原砖 − 单片 × 片数，之前只算单片导致面积对不上。
+
 ## [0.1.24] - 2026-11-02
 
 ### Fixed

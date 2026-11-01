@@ -70,7 +70,9 @@ def evaluate_batch(
     # 之前这里混入 batch.quantity（那是「块数」，与单块切割片数无关）和硬编码 20，
     # 导致大余料（如 1500×7490 切 600×600 实际能切 24 片）被低估成 20 片，匹配凑不满。
     cap = max(1, want_pieces)
-    max_pieces = geometry.pieces_available(region, w, h, demand_short, demand_long, cap)
+    # 用 best 的单一方向估算可切片数，保证和分配的 cut_option 一致；
+    # 否则混合方向能切 10 片、单一方向只切得出 8 片，确认时就会报「切不出」。
+    max_pieces = geometry.pieces_available(region, w, h, demand_short, demand_long, cap, best["cut_option"])
     stock_area = batch.area_mm2
     demand_area = demand_short * demand_long
     waste = max(0, stock_area - demand_area)

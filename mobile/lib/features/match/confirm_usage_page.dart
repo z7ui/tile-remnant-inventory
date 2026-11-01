@@ -372,14 +372,15 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                             area: formatArea(_batch.areaMm2)),
                         _CompareCell(
                             label: '本次需求',
-                            size: formatSize(widget.demandWidthMm,
-                                widget.demandLengthMm, unit),
-                            area: formatArea(pieceArea)),
+                            size:
+                                '${formatSize(widget.demandWidthMm, widget.demandLengthMm, unit)} × ${widget.quantity}',
+                            area: formatArea(pieceArea * widget.quantity)),
                         _CompareCell(
                             label: '切后余料',
                             size: formatSize(
                                 remnant.widthMm, remnant.heightMm, unit),
-                            area: formatArea(remnant.areaMm2)),
+                            area: formatArea(
+                                _batch.areaMm2 - pieceArea * widget.quantity)),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.sm),
