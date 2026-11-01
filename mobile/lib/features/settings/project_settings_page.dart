@@ -31,12 +31,62 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
   bool _loadingMembers = false;
   String? _memberError;
 
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _minCtrl;
+  String? _editUnit;
+  bool _saving = false;
+
   @override
   void initState() {
     super.initState();
+    _nameCtrl = TextEditingController(text: widget.project.name);
+    _minCtrl = TextEditingController(text: '${widget.project.minUsableMm}');
+    _editUnit = widget.project.defaultUnit;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _loadMembers();
     });
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _minCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveProject() async {
+    final String name = _nameCtrl.text.trim();
+    if (name.length < 2) {
+      showSnack(context, '项目名称至少 2 个字符', error: true);
+      return;
+    }
+    final int? minUsable = int.tryParse(_minCtrl.text.trim());
+    if (minUsable == null || minUsable < 0 || minUsable > 5000) {
+      showSnack(context, '最小可用尺寸需为 0–5000mm 的整数', error: true);
+      return;
+    }
+    if (_editUnit == null) {
+      showSnack(context, '请选择默认单位', error: true);
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      final Session session = SessionScope.of(context);
+      await widget.api.updateProject(
+        name: name,
+        defaultUnit: _editUnit,
+        minUsableMm: minUsable,
+      );
+      await session.refreshProjects();
+      if (!mounted) return;
+      setState(() => _saving = false);
+      widget.onChanged();
+      showSnack(context, '已保存。库存里的尺寸会按新的默认单位显示');
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      showSnack(context, errorMessage(error), error: true);
+    }
   }
 
   Future<void> _loadMembers() async {
@@ -115,7 +165,12 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final Session session = SessionScope.of(context);
-    final JoinedProject project = widget.project;
+    // 取 session 里的最新快照：保存后 refreshProjects() 会更新它，
+    // 而 widget.project 是父级传进来的旧引用，不会跟着变。
+    final JoinedProject project = session.projects.firstWhere(
+      (JoinedProject p) => p.id == widget.project.id,
+      orElse: () => widget.project,
+    );
 
     return Scaffold(
       appBar: buildAppBar(context, '项目设置'),
@@ -132,15 +187,22 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(project.title, style: Theme.of(context).textTheme.headlineSmall),
+                Text(project.title,
+                    style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 4),
                 Row(
                   children: <Widget>[
-                    Tag(label: project.isOwner ? '拥有者设备' : '成员设备', color: AppColors.primary),
+                    Tag(
+                        label: project.isOwner ? '拥有者设备' : '成员设备',
+                        color: AppColors.primary),
                     const SizedBox(width: AppSpacing.sm),
-                    Tag(label: project.defaultUnit == 'cm' ? '默认 cm' : '默认 mm', color: AppColors.sub(context)),
+                    Tag(
+                        label: project.defaultUnit == 'cm' ? '默认 cm' : '默认 mm',
+                        color: AppColors.sub(context)),
                     const SizedBox(width: AppSpacing.sm),
-                    Tag(label: '最小可用 ${project.minUsableMm}mm', color: AppColors.sub(context)),
+                    Tag(
+                        label: '最小可用 ${project.minUsableMm}mm',
+                        color: AppColors.sub(context)),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -151,6 +213,66 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
               ],
             ),
           ),
+          if (project.isOwner) ...<Widget>[
+            const SizedBox(height: AppSpacing.lg),
+            const SectionTitle(title: '项目信息', subtitle: '改完点保存生效'),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.card(context),
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: Border.all(color: AppColors.line(context)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  TextField(
+                    controller: _nameCtrl,
+                    maxLength: 40,
+                    decoration: const InputDecoration(
+                      labelText: '项目名称',
+                      counterText: '',
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text('默认单位',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.sub(context))),
+                  const SizedBox(height: AppSpacing.sm),
+                  SegmentedButton<String>(
+                    segments: const <ButtonSegment<String>>[
+                      ButtonSegment<String>(value: 'mm', label: Text('毫米 mm')),
+                      ButtonSegment<String>(value: 'cm', label: Text('厘米 cm')),
+                    ],
+                    selected:
+                        _editUnit == null ? <String>{} : <String>{_editUnit!},
+                    emptySelectionAllowed: true,
+                    onSelectionChanged: (Set<String> selection) => setState(
+                        () => _editUnit =
+                            selection.isEmpty ? null : selection.first),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextField(
+                    controller: _minCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: '最小可用尺寸',
+                      suffixText: 'mm',
+                      helperText: '任一边小于该值时，余料入库会提示',
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  PrimaryButton(
+                    label: '保存',
+                    loading: _saving,
+                    onPressed: _saveProject,
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
           const SectionTitle(title: '邀请与成员', subtitle: '邀请码长期有效，可撤销或重置'),
           Container(
@@ -168,7 +290,8 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: project.isOwner
                       ? () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(builder: (_) => InvitePage(project: project)),
+                            MaterialPageRoute<void>(
+                                builder: (_) => InvitePage(project: project)),
                           )
                       : null,
                 ),
@@ -177,28 +300,38 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
                   if (_loadingMembers)
                     const Padding(
                       padding: EdgeInsets.all(AppSpacing.lg),
-                      child: Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4))),
+                      child: Center(
+                          child: SizedBox(
+                              width: 22,
+                              height: 22,
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 2.4))),
                     )
                   else if (_memberError != null)
                     Padding(
                       padding: const EdgeInsets.all(AppSpacing.md),
-                      child: ErrorBanner(message: _memberError!, onRetry: _loadMembers),
+                      child: ErrorBanner(
+                          message: _memberError!, onRetry: _loadMembers),
                     )
                   else
                     ...(_members ?? const <MemberInfo>[]).map(
                       (MemberInfo member) => ListTile(
-                        leading: Icon(member.isCurrent ? Icons.phone_android : Icons.devices_outlined),
+                        leading: Icon(member.isCurrent
+                            ? Icons.phone_android
+                            : Icons.devices_outlined),
                         title: Text(member.name),
                         subtitle: Text(
                           '${member.isOwner ? '拥有者' : '成员'} · 加入于 ${formatDateTime(member.joinedAt)}',
-                          style: TextStyle(fontSize: 12, color: AppColors.sub(context)),
+                          style: TextStyle(
+                              fontSize: 12, color: AppColors.sub(context)),
                         ),
                         trailing: member.isOwner
                             ? null
                             : IconButton(
                                 tooltip: '移除该设备',
                                 onPressed: () => _removeMember(member),
-                                icon: const Icon(Icons.person_remove_outlined, color: AppColors.danger),
+                                icon: const Icon(Icons.person_remove_outlined,
+                                    color: AppColors.danger),
                               ),
                       ),
                     ),
@@ -219,11 +352,13 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
                 ListTile(
                   leading: const Icon(Icons.dns_outlined),
                   title: const Text('服务器'),
-                  subtitle: Text(session.serverUrl, style: const TextStyle(fontSize: 12)),
+                  subtitle: Text(session.serverUrl,
+                      style: const TextStyle(fontSize: 12)),
                   trailing: IconButton(
                     tooltip: '复制地址',
                     onPressed: () async {
-                      await Clipboard.setData(ClipboardData(text: session.serverUrl));
+                      await Clipboard.setData(
+                          ClipboardData(text: session.serverUrl));
                       if (mounted) showSnack(context, '服务器地址已复制');
                     },
                     icon: const Icon(Icons.copy, size: 20),
@@ -233,14 +368,18 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
                 ListTile(
                   leading: const Icon(Icons.fingerprint),
                   title: const Text('本机设备 ID'),
-                  subtitle: Text(session.deviceId ?? '—', style: const TextStyle(fontSize: 12)),
+                  subtitle: Text(session.deviceId ?? '—',
+                      style: const TextStyle(fontSize: 12)),
                 ),
                 Divider(height: 1, color: AppColors.line(context)),
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: Text(
                     '无账号体系：设备密钥保存在系统安全存储中。换手机或清除应用数据后需要重新扫码加入，没有项目恢复码。',
-                    style: TextStyle(fontSize: 12.5, height: 1.5, color: AppColors.sub(context)),
+                    style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.5,
+                        color: AppColors.sub(context)),
                   ),
                 ),
               ],
@@ -254,8 +393,10 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
               child: OutlinedButton.icon(
                 onPressed: _leave,
                 icon: const Icon(Icons.logout, color: AppColors.danger),
-                label: const Text('移除本项目关联', style: TextStyle(color: AppColors.danger)),
-                style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.danger)),
+                label: const Text('移除本项目关联',
+                    style: TextStyle(color: AppColors.danger)),
+                style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.danger)),
               ),
             ),
           if (project.isOwner) ...<Widget>[
@@ -264,8 +405,10 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
               child: OutlinedButton.icon(
                 onPressed: _delete,
                 icon: const Icon(Icons.delete_forever, color: AppColors.danger),
-                label: const Text('删除项目（软删除）', style: TextStyle(color: AppColors.danger)),
-                style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.danger)),
+                label: const Text('删除项目（软删除）',
+                    style: TextStyle(color: AppColors.danger)),
+                style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.danger)),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -276,7 +419,8 @@ class _ProjectSettingsPageState extends State<ProjectSettingsPage> {
           ],
           const SizedBox(height: AppSpacing.xl),
           Center(
-            child: Text('余砖管家 0.1.0', style: TextStyle(fontSize: 12, color: AppColors.disabled)),
+            child: Text('余砖管家 0.1.0',
+                style: TextStyle(fontSize: 12, color: AppColors.disabled)),
           ),
         ],
       ),

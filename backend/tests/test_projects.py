@@ -232,3 +232,54 @@ def test_heartbeat(client, device):
     )
     assert response.status_code == 200
     assert response.json()["ok"] is True
+
+
+def test_patch_project_unit_does_not_touch_inventory(client, project):
+    """改默认单位只是显示层的事：库存里存的毫米整数一个都不变。
+
+    这是「已建项目能不能改单位」的核心保证——尺寸统一按 mm 存，
+    单位只在输入解析和显示格式化的两端换算。
+    """
+    batch = add_inventory(client, project, 900, 600, 3)
+    before = (batch["width_mm"], batch["height_mm"], batch["quantity"])
+
+    response = client.patch(
+        f"/api/projects/{project['id']}",
+        json={"default_unit": "cm", "min_usable_mm": 80, "name": "改名后的工地"},
+        headers=project["headers"],
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()["project"]
+    assert body["default_unit"] == "cm"
+    assert body["min_usable_mm"] == 80
+    assert body["name"] == "改名后的工地"
+    # 特征码不因改名而变
+    assert body["code"]
+
+    inventory = client.get(
+        f"/api/projects/{project['id']}/inventory",
+        params={"only_available": "false"},
+        headers=project["headers"],
+    ).json()
+    item = inventory["items"][0]
+    after = (item["width_mm"], item["height_mm"], item["quantity"])
+    assert after == before, f"尺寸/数量被改动：{before} -> {after}"
+
+
+def test_only_owner_can_patch_project(client, project):
+    """非拥有者设备改不了项目设置。"""
+    worker = register_device(client, "工人手机")
+    joined = client.post(
+        "/api/projects/join",
+        json={"invite_code": project["invite_code"]},
+        headers=device_headers(worker["device_id"], worker["device_secret"]),
+    )
+    assert joined.status_code == 200, joined.text
+    worker_headers = auth_headers(worker["device_id"], joined.json()["project_token"])
+
+    response = client.patch(
+        f"/api/projects/{project['id']}",
+        json={"default_unit": "cm"},
+        headers=worker_headers,
+    )
+    assert response.status_code == 403, response.text

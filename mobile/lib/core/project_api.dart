@@ -76,6 +76,22 @@ class ProjectApi {
     return Batch.fromJson((json as Map)['batch']);
   }
 
+  /// 修改项目设置。只传要改的字段，其余留 null 表示不动。
+  /// 后端 PATCH 只允许拥有者调用。
+  Future<JoinedProject> updateProject({
+    String? name,
+    String? defaultUnit,
+    int? minUsableMm,
+  }) async {
+    final Map<String, dynamic> body = <String, dynamic>{};
+    if (name != null) body['name'] = name;
+    if (defaultUnit != null) body['default_unit'] = defaultUnit;
+    if (minUsableMm != null) body['min_usable_mm'] = minUsableMm;
+    final dynamic json =
+        await _api.patch(_base, body: body, projectToken: project.token);
+    return JoinedProject.fromApi((json as Map)['project'], project.token);
+  }
+
   Future<Batch> updateBatch(String batchId, Map<String, dynamic> payload) async {
     final dynamic json = await _api.patch('$_base/inventory/$batchId', body: payload, projectToken: project.token);
     return Batch.fromJson((json as Map)['batch']);
