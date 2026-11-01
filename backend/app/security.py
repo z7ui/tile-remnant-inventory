@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
+import time
 
 import bcrypt
 
@@ -25,6 +26,38 @@ def verify_device_secret(secret: str, hashed: str) -> bool:
         return bcrypt.checkpw(secret.encode("utf-8")[:72], hashed.encode("utf-8"))
     except (ValueError, TypeError):
         return False
+
+
+# bcrypt costs ~250 ms at the default cost factor. Device-level endpoints
+# (project list / create / join) are called on every app start, so reusing a
+# recent *success* keeps that off the hot path.
+#
+# Why this is safe:
+#   * only successes are cached (a wrong secret always pays the full cost);
+#   * the key is a sha256 of (device_id, secret) — the secret is never stored;
+#   * revocation is still immediate, because callers check ``device.revoked_at``
+#     in the database *before* reaching this function.
+_VERIFY_CACHE: dict[str, float] = {}
+_VERIFY_TTL_SECONDS = 300.0
+_VERIFY_MAX_ENTRIES = 2048
+
+
+def verify_device_secret_cached(device_id: str, secret: str, hashed: str) -> bool:
+    """verify_device_secret with a short-lived cache for successful checks."""
+    if not secret or not hashed:
+        return False
+    key = hashlib.sha256(f"{device_id}\x00{secret}".encode("utf-8")).hexdigest()
+    now = time.monotonic()
+    seen_at = _VERIFY_CACHE.get(key)
+    if seen_at is not None and now - seen_at < _VERIFY_TTL_SECONDS:
+        return True
+    if not verify_device_secret(secret, hashed):
+        _VERIFY_CACHE.pop(key, None)
+        return False
+    if len(_VERIFY_CACHE) >= _VERIFY_MAX_ENTRIES:
+        _VERIFY_CACHE.clear()
+    _VERIFY_CACHE[key] = now
+    return True
 
 
 def new_device_secret() -> str:

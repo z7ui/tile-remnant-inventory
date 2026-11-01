@@ -4,12 +4,32 @@ from __future__ import annotations
 
 import csv
 import io
+import re
 from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..models import InventoryMovement, Project
+
+# Excel / Numbers / WPS 打开 CSV 时，会把以 = + - @ 开头的单元格当公式执行
+# （CSV injection：`=HYPERLINK("http://x","点我")` 或 `=cmd|'/C calc'!A0`）。
+# 这里的「项目」和「备注」两列直接来自用户输入，所以要中和掉。
+# 但 `-5` 这种负数不能被误伤，所以 `-` 只在「不像数字」时才加前缀。
+_NUMERIC = re.compile(r"^-?\d+(?:\.\d+)?$")
+_FORMULA_HEADS = ("=", "+", "@", "\t", "\r")
+
+
+def _csv_safe(value: object) -> object:
+    """Neutralise formula-looking strings so spreadsheet apps treat them as text."""
+    if not isinstance(value, str) or not value:
+        return value
+    head = value[0]
+    if head in _FORMULA_HEADS:
+        return "'" + value
+    if head == "-" and not _NUMERIC.match(value):
+        return "'" + value
+    return value
 from ..utils import iso
 from .serializers import MOVEMENT_LABELS, movement_payload
 
@@ -115,7 +135,7 @@ def export_csv(db: Session, project: Project, filters: dict, limit: int = 20000)
     writer.writerow([h for h, _ in CSV_HEADERS])
     for m in rows:
         data = _row(m, project)
-        writer.writerow([data.get(key, "") for _, key in CSV_HEADERS])
+        writer.writerow([_csv_safe(data.get(key, "")) for _, key in CSV_HEADERS])
     return buffer.getvalue()
 
 

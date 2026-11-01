@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import unicodedata
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -12,6 +13,22 @@ Unit = Literal["mm", "cm"]
 CutOption = Literal["long_side_cut", "short_side_cut"]
 RemnantAction = Literal["store", "discard"]
 ShapeType = Literal["rectangle", "l_shape"]
+
+# 项目名里不允许出现的 Unicode 类别：
+#   Cc 控制字符（\x00、\n、\r、\x1b…）—— 会撑断日志行、把 JSON/CSV 结构搞乱
+#   Cf 格式字符（零宽空格 U+200B、RTL 覆写 U+202E、BOM U+FEFF…）—— 肉眼不可见，
+#      可以造出两个「看起来一样」的项目名，也能让界面文字倒着显示
+#   Cs 代理项、Co 私用区、Cn 未分配 —— 不是正常输入
+_FORBIDDEN_CATEGORIES = frozenset({"Cc", "Cf", "Cs", "Co", "Cn"})
+
+
+def _reject_invisible_chars(value: str, field: str = "项目名称") -> str:
+    for index, char in enumerate(value):
+        if unicodedata.category(char) in _FORBIDDEN_CATEGORIES:
+            raise ValueError(
+                f"{field}第 {index + 1} 个字符是控制字符或不可见格式字符（U+{ord(char):04X}），请删掉后重试"
+            )
+    return value
 
 DimensionValue = Annotated[str | int | float, Field(description="尺寸，支持 800 / 80cm / 800mm")]
 
@@ -40,13 +57,23 @@ class ProjectCreateIn(StrictModel):
     def _name_not_blank(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("项目名称不能为空")
-        return value
+        return _reject_invisible_chars(value)
 
 
 class ProjectPatchIn(StrictModel):
     default_unit: Unit | None = None
     min_usable_mm: int | None = Field(default=None, ge=0, le=5000)
     name: str | None = Field(default=None, min_length=1, max_length=120)
+
+    @field_validator("name")
+    @classmethod
+    def _name_clean(cls, value: str | None) -> str | None:
+        # 改名和新建必须走同一套字符检查，否则绕一下就能塞进控制字符。
+        if value is None:
+            return None
+        if not value.strip():
+            raise ValueError("项目名称不能为空")
+        return _reject_invisible_chars(value)
 
 
 class ProjectJoinIn(StrictModel):

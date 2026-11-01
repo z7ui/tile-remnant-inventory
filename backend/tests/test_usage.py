@@ -347,3 +347,31 @@ def test_movement_filters(client, project):
     discard = client.get(base, params={"type": "remnant_discard"}, headers=project["headers"]).json()
     assert discard["total"] == 1
     assert discard["items"][0]["remnant_action_label"] == "丢弃"
+
+
+def test_remnant_below_threshold_is_flagged_but_still_storable(client, project):
+    """D4：最窄边小于项目阈值时标 below_threshold，但不拦截入库。
+
+    900×800 切走 880×780，余料是两条 20mm 的窄边，外框仍然是 900×800。
+    所以判据必须看最窄段，不能看外框短边——否则提示永远不会出现。
+    """
+    batch = add_inventory(client, project, 900, 800, 1)
+    response = _confirm(
+        client,
+        project,
+        {
+            "length": 880,
+            "width": 780,
+            "quantity": 1,
+            "allocations": [_alloc(batch, action="store")],
+        },
+    )
+    assert response.status_code == 200, response.text
+    result = response.json()["results"][0]
+    remnant = result["remnant"]
+    assert remnant is not None
+    assert remnant["min_side_mm"] == 20
+    assert remnant["below_threshold"] is True
+    # 提示归提示，仍然允许强制入库
+    assert result["remnant_action"] == "store"
+    assert result["remnant_batch"] is not None

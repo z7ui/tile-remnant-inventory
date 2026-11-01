@@ -344,6 +344,10 @@ def remnant_payload(remainder: Sequence[Rect], min_usable_mm: int) -> dict | Non
         return None
     w, h, rects = canonicalise(remainder)
     geom = describe(rects, w, h)
+    # 判「是否低于可再用阈值」要看最窄的那一段，不能看外框短边：
+    # 900×800 的砖切走 880×780，余料是两条 20mm 的边，外框 900×800 却会
+    # 被 min(w, h)=800 判成「够大」，提示就永远不出现。
+    narrowest = min(min(r[2], r[3]) for r in rects)
     return {
         "exists": True,
         "shape_type": geom["type"],
@@ -355,8 +359,8 @@ def remnant_payload(remainder: Sequence[Rect], min_usable_mm: int) -> dict | Non
         "notch": geom.get("notch"),
         "notch_corner": geom.get("notch_corner"),
         "rects": geom["rects"],
-        "min_side_mm": min(w, h),
-        "below_threshold": min(w, h) < min_usable_mm,
+        "min_side_mm": narrowest,
+        "below_threshold": narrowest < min_usable_mm,
         "geometry": geom,
     }
 

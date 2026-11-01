@@ -103,8 +103,24 @@ def active_invite(db: Session, project_id: str) -> ProjectInvite | None:
 # ---------------------------------------------------------------------------
 # create / list / join
 # ---------------------------------------------------------------------------
+# 与 models.Project.name_key 的列宽一致。NFKC 归一化会把某些字符展开
+# （㍿ U+337F → 株式会社，ﬁ → fi），120 字符的名称归一化后可能超过列宽，
+# SQLite 不校验但 PostgreSQL 会直接报错，所以入表前挡掉。
+_NAME_KEY_MAX = 160
+
+
+def _guard_key_length(key: str) -> str:
+    if len(key) > _NAME_KEY_MAX:
+        raise ApiError(
+            422,
+            "project_name_too_long",
+            f"项目名称归一化后超过 {_NAME_KEY_MAX} 个字符（当前 {len(key)}），"
+            "请缩短，或换用更简单的字符（全角符号/合字会被展开）。",
+        )
+    return key
+
 def check_name_available(db: Session, name: str, exclude_project_id: str | None = None) -> dict:
-    key = project_name_key(name)
+    key = _guard_key_length(project_name_key(name))
     if not key:
         raise ApiError(422, "project_name_blank", "项目名称不能为空。")
     stmt = select(Project).where(Project.name_key == key)
@@ -122,7 +138,7 @@ def check_name_available(db: Session, name: str, exclude_project_id: str | None 
 
 def create_project(db: Session, device: Device, payload: ProjectCreateIn, ip: str = "") -> dict:
     name = normalise_project_name(payload.name)
-    key = project_name_key(payload.name)
+    key = _guard_key_length(project_name_key(payload.name))
     if not key:
         raise ApiError(422, "project_name_blank", "项目名称不能为空。")
 
@@ -273,7 +289,7 @@ def update_project(db: Session, ctx: ProjectContext, payload: ProjectPatchIn, ip
     project = ctx.project
     if payload.name is not None:
         new_name = normalise_project_name(payload.name)
-        new_key = project_name_key(payload.name)
+        new_key = _guard_key_length(project_name_key(payload.name))
         conflict = db.scalar(select(Project).where(Project.name_key == new_key, Project.id != project.id))
         if conflict is not None:
             raise ApiError(409, "project_name_taken", f"项目名称「{new_name}」已被占用，请换一个名称。")

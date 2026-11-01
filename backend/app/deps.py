@@ -13,7 +13,7 @@ from .config import settings
 from .db import get_db
 from .errors import ApiError
 from .models import Device, Project, ProjectAccessToken, ProjectMember
-from .security import token_fingerprint, verify_device_secret
+from .security import token_fingerprint, verify_device_secret_cached
 from .utils import iso, utcnow
 
 
@@ -39,7 +39,7 @@ def get_device(
     device = db.get(Device, x_device_id)
     if device is None or device.revoked_at is not None:
         raise ApiError(401, "device_not_found", "设备未注册或已被停用，请重新注册。")
-    if not verify_device_secret(x_device_secret, device.secret_hash):
+    if not verify_device_secret_cached(device.id, x_device_secret, device.secret_hash):
         raise ApiError(401, "device_secret_invalid", "设备密钥不正确。")
     if device.last_seen_at is None or utcnow() - device.last_seen_at > timedelta(minutes=5):
         device.last_seen_at = utcnow()
