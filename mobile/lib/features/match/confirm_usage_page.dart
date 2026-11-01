@@ -168,10 +168,10 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
               const SizedBox(height: AppSpacing.sm),
               PrimaryButton(
                 label: '完成',
-                onPressed: () {
-                  Navigator.of(sheetContext).pop();
-                  Navigator.of(context).pop(true);
-                },
+                // 只关这张卡片；确认页由 _confirm 里的 pop(true) 负责关。
+                // 之前这里也 pop 了一次页面，导致连着关掉匹配页、直接退回主页，
+                // 多块砖匹配时看不到「还剩 N 片待匹配」。
+                onPressed: () => Navigator.of(sheetContext).pop(),
               ),
             ],
           ),

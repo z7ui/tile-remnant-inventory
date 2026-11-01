@@ -311,15 +311,22 @@ class _CandidateCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Row(
+          // 用 Wrap 而不是 Row：标签可能有四个（形状/剩余/来源/旋转），
+          // 窄屏一行放不下，Row 会把最后一个挤出可视区。
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
               Text(batch.code, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.sub(context))),
-              const SizedBox(width: 6),
               if (batch.isLShape) Tag(label: 'L 形', color: AppColors.remnant) else Tag(label: '矩形', color: AppColors.primary),
-              const SizedBox(width: 4),
               Tag(label: '剩 ${batch.quantity} 片', color: AppColors.sub(context)),
-              const Spacer(),
-              if (candidate.rotation == 90) Tag(label: '旋转 90°', color: AppColors.warning, icon: Icons.rotate_90_degrees_ccw),
+              // 这块料是之前切砖切出来的，不是新买的整砖——匹配到它时要说清楚，
+              // 否则用户会纳闷"我什么时候有这块"。
+              if (batch.sourceType == 'cut')
+                Tag(label: '切砖余料', color: AppColors.success, icon: Icons.content_cut),
+              if (candidate.rotation == 90)
+                Tag(label: '旋转 90°', color: AppColors.warning, icon: Icons.rotate_90_degrees_ccw),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),

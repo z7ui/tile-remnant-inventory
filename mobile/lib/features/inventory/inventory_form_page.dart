@@ -102,8 +102,15 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
       );
       await session.prefs.setUnit(widget.api.project.id, _unit);
       final String place = _location.text.trim();
-      if (place.isNotEmpty) {
-        await session.prefs.setLastLocation(widget.api.project.id, place);
+      if (stay) {
+        // 连续录入：这一摞砖基本都在同一处，记住它
+        if (place.isNotEmpty) {
+          await session.prefs.setLastLocation(widget.api.project.id, place);
+        }
+      } else {
+        // 「并返回」意味着这次录入收工了。清掉记忆，下次进来位置是空的——
+        // 否则标题下面挂着上次的地点，用户会以为已经填好，直接点确认就存错位置。
+        await session.prefs.setLastLocation(widget.api.project.id, '');
       }
       if (!mounted) return;
 
