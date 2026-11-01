@@ -64,5 +64,10 @@ ssh -i "$KEY" "$HOST" "mkdir -p ${REMOTE_DIR}"
 ssh -i "$KEY" "$HOST" "cat > ${REMOTE_DIR}/${NAME}" < "$APK"
 printf '%s\n' "$JSON" | ssh -i "$KEY" "$HOST" "cat > ${REMOTE_DIR}/version.json && chmod 644 ${REMOTE_DIR}/*"
 
+# 只留最新一版：旧包既占空间，也容易让人从目录列表里下错版本。
+# 按修改时间排序，除第一个全删。
+ssh -i "$KEY" "$HOST" "cd ${REMOTE_DIR} && ls -1t tile-remnant-*.apk 2>/dev/null | tail -n +2 | xargs -r rm -f"
+echo "==> 旧版本已清理，只保留 ${NAME}"
+
 echo "==> 已发布：${PUBLIC_BASE}/apk/${NAME}"
 echo "==> 清单：  ${PUBLIC_BASE}/apk/version.json"
