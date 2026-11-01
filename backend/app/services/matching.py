@@ -135,12 +135,14 @@ def match(
             continue
         candidates.append(evaluated)
 
-    # waste first, then the more reusable remnant, then more pieces / older batch
+    # 按「每片浪费面积」排序（总浪费 / 能切几片），让利用率高的余料优先。
+    # 之前按单块浪费（切 1 片的浪费）排，把「单块小但利用率低」的余料排前面，
+    # 导致一块能切多片的大余料（利用率高）反而用不上。
+    demand_area = demand_short * demand_long
     candidates.sort(
         key=lambda c: (
-            c["match"]["waste_mm2"],
+            max(0, c["stock"]["area_mm2"] - c["match"]["max_pieces"] * demand_area) / c["match"]["max_pieces"],
             -c["match"]["remnant_value"],
-            -c["match"]["max_pieces"],
             c["batch"]["created_at"],
             c["batch"]["batch_no"],
         )
