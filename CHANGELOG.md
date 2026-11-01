@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.26] - 2026-11-02
+
+### Fixed
+
+#### 移动端（Flutter）
+- 匹配图例的多片需求改为**二维网格**排列（沿宽排满一行再换下一行），之前沿一个方向排，
+  只在单列余料上碰巧对，多列（如 1500 宽切 600 需求能放 2 列）会全排成一条竖列，与真实切割不符。
+
 ## [0.1.25] - 2026-11-02
 
 ### Fixed

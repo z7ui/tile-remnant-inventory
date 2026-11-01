@@ -53,7 +53,6 @@ class TileShapePreview extends StatelessWidget {
     this.rects = const <ShapeRect>[],
     this.demand,
     this.demandCount = 1,
-    this.demandAlongY = false,
     this.remnantMode = false,
     this.showCutLines = false,
     this.height = 160,
@@ -67,7 +66,6 @@ class TileShapePreview extends StatelessWidget {
   final List<ShapeRect> rects;
   final ShapeRect? demand;
   final int demandCount;
-  final bool demandAlongY;
   final bool remnantMode;
   final bool showCutLines;
   final double height;
@@ -96,7 +94,6 @@ class TileShapePreview extends StatelessWidget {
                 rects: region,
                 demand: demand,
                 demandCount: demandCount,
-                demandAlongY: demandAlongY,
                 remnantMode: remnantMode,
                 showCutLines: showCutLines,
                 showDimensions: showDimensions,
@@ -169,7 +166,6 @@ class _TileShapePainter extends CustomPainter {
     required this.rects,
     required this.demand,
     required this.demandCount,
-    required this.demandAlongY,
     required this.remnantMode,
     required this.showCutLines,
     required this.showDimensions,
@@ -181,7 +177,6 @@ class _TileShapePainter extends CustomPainter {
   final List<ShapeRect> rects;
   final ShapeRect? demand;
   final int demandCount;
-  final bool demandAlongY;
   final bool remnantMode;
   final bool showCutLines;
   final bool showDimensions;
@@ -255,11 +250,17 @@ class _TileShapePainter extends CustomPainter {
     final ShapeRect? d = demand;
     if (d != null) {
       final int n = demandCount <= 0 ? 1 : demandCount;
+      // 二维网格：沿宽(x)先排满一行，再换下一行(沿高 y)。
+      // 之前「沿一个方向排」只在单列余料上碰巧对；多列（如 1500 宽切 600 需求可放 2 列）
+      // 时全排成一条竖列，和真实二维切割对不上。
+      final int cols = d.w > 0 ? (widthMm ~/ d.w) : 1;
+      final int rows = (n + cols - 1) ~/ cols;
       for (int i = 0; i < n; i++) {
-        // 多片需求沿切割方向平移：long_side_cut 沿长边(y)堆叠，short_side_cut 沿短边(x)排开
+        final int c = i % cols;
+        final int r = i ~/ cols;
         final ShapeRect piece = ShapeRect(
-          x: d.x + (demandAlongY ? 0 : i * d.w),
-          y: d.y + (demandAlongY ? i * d.h : 0),
+          x: d.x + c * d.w,
+          y: d.y + r * d.h,
           w: d.w,
           h: d.h,
         );
@@ -274,15 +275,16 @@ class _TileShapePainter extends CustomPainter {
         );
         if (showCutLines) {
           if (n == 1) {
-            // 单片：沿需求块右边、上边画两条切缝
+            // 单片：沿需求块右边、上边画两条切缝（表示「切出这一片」的两刀）
             _dashedLine(canvas, Offset(rect.right, bbox.top), Offset(rect.right, bbox.bottom));
             _dashedLine(canvas, Offset(bbox.left, rect.top), Offset(bbox.right, rect.top));
-          } else if (i < n - 1) {
-            // 多片：片与片之间画分界线
-            if (demandAlongY) {
-              _dashedLine(canvas, Offset(bbox.left, rect.bottom), Offset(bbox.right, rect.bottom));
-            } else {
+          } else {
+            // 多片网格：列之间的竖切缝 + 行之间的横切缝
+            if (c < cols - 1) {
               _dashedLine(canvas, Offset(rect.right, bbox.top), Offset(rect.right, bbox.bottom));
+            }
+            if (r < rows - 1) {
+              _dashedLine(canvas, Offset(bbox.left, rect.top), Offset(bbox.right, rect.top));
             }
           }
         }
@@ -339,7 +341,6 @@ class _TileShapePainter extends CustomPainter {
         old.heightMm != heightMm ||
         old.demand != demand ||
         old.demandCount != demandCount ||
-        old.demandAlongY != demandAlongY ||
         old.remnantMode != remnantMode ||
         old.showCutLines != showCutLines ||
         old.rects != rects ||

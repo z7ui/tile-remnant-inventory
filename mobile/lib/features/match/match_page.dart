@@ -379,7 +379,6 @@ class _CandidateCard extends StatelessWidget {
             rects: batch.rects,
             demand: candidate.placement,
             demandCount: candidate.maxPieces,
-            demandAlongY: candidate.cutOption == 'long_side_cut',
             remnantMode: true,
             showCutLines: true,
             height: 168,
