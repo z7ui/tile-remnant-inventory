@@ -159,10 +159,11 @@ def test_infeasible_cut_option_rejected(client, project):
 
 def test_insufficient_quantity_in_batch(client, project):
     batch = add_inventory(client, project, 900, 800, 1)
+    # 一块 900×800 最多切 4 片 400×400，要切 5 片则不足
     response = _confirm(
         client,
         project,
-        {"length": 400, "width": 400, "quantity": 2, "allocations": [_alloc(batch, quantity=2, action="store")]},
+        {"length": 400, "width": 400, "quantity": 5, "allocations": [_alloc(batch, quantity=5, action="store")]},
     )
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "insufficient_quantity"
@@ -199,8 +200,9 @@ def test_multi_piece_deduction_and_remnant_quantity(client, project):
     body = response.json()
     usage_moves = [m for m in body["movements"] if m["type"] == "usage"]
     assert len(usage_moves) == 3
-    assert [m["quantity_before"] for m in usage_moves] == [5, 4, 3]
-    assert [m["quantity_after"] for m in usage_moves] == [4, 3, 2]
+    # 3 片来自同一块，块数只减 1：第一条 5→4，后续都是 4→4
+    assert [m["quantity_before"] for m in usage_moves] == [5, 4, 4]
+    assert [m["quantity_after"] for m in usage_moves] == [4, 4, 4]
     produced = body["results"][0]["remnant_batch"]
     # 3 片切完只剩 1 条连通的余料，不是 3 条。
     # 旧实现拿「切 1 片的余料」乘片数，形状和数量都是错的。
@@ -209,7 +211,7 @@ def test_multi_piece_deduction_and_remnant_quantity(client, project):
 
     inventory = client.get(f"/api/projects/{project['id']}/inventory", headers=project["headers"]).json()
     quantities = {item["id"]: item["quantity"] for item in inventory["items"]}
-    assert quantities[batch["id"]] == 2
+    assert quantities[batch["id"]] == 4
     assert quantities[produced["id"]] == 1
 
 

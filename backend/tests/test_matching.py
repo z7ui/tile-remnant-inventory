@@ -104,8 +104,8 @@ def test_max_pieces_per_batch(client, project):
     candidate = result["candidates"][0]
     assert candidate["match"]["max_pieces"] == 4
     assert candidate["batch"]["quantity"] == 5
-    # only 4 pieces fit in one tile -> 5th piece is unfulfilled
-    assert result["unfulfilled_quantity"] == 1
+    # 一块 900×800 能切 4 片，5 块共 20 片，5 片需求完全满足
+    assert result["unfulfilled_quantity"] == 0
 
 
 def test_match_invalid_dimension(client, project):

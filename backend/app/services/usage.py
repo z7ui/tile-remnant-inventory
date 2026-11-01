@@ -46,18 +46,22 @@ def _auto_allocations(db: Session, project: Project, short: int, long: int, qty:
     for c in plan["candidates"]:
         if remaining <= 0:
             break
-        take = min(remaining, c["match"]["max_pieces"], c["batch"]["quantity"])
-        if take <= 0:
-            continue
-        allocations.append(
-            {
-                "batch_id": c["batch"]["id"],
-                "quantity": take,
-                "cut_option": c["match"]["cut_option"],
-                "remnant_action": "store" if c["match"]["remnant"] else None,
-            }
-        )
-        remaining -= take
+        max_pieces = c["match"]["max_pieces"]
+        blocks = c["batch"]["quantity"]
+        while remaining > 0 and blocks > 0:
+            take = min(remaining, max_pieces)
+            if take <= 0:
+                break
+            allocations.append(
+                {
+                    "batch_id": c["batch"]["id"],
+                    "quantity": take,
+                    "cut_option": c["match"]["cut_option"],
+                    "remnant_action": "store" if c["match"]["remnant"] else None,
+                }
+            )
+            remaining -= take
+            blocks -= 1
     if remaining > 0:
         raise ApiError(
             409,
@@ -145,13 +149,6 @@ def _do_confirm(
             raise ApiError(409, "batch_unavailable", f"批次 #{batch.batch_no:04d} 已不可用。")
 
         count = int(alloc["quantity"])
-        if count > batch.quantity:
-            raise ApiError(
-                409,
-                "insufficient_quantity",
-                f"批次 #{batch.batch_no:04d} 只剩 {batch.quantity} 片，不足以取出 {count} 片。",
-                {"batch_id": batch.id, "available": batch.quantity, "requested": count},
-            )
 
         bw, bh, region = geometry.region_from_geometry(batch.geometry)
         if not geometry.fits(region, short, long):
@@ -182,7 +179,12 @@ def _do_confirm(
         for _ in range(count):
             step = geometry.plan_cut(remaining, bw, bh, short, long, option)
             if step is None:
-                break
+                raise ApiError(
+                    409,
+                    "insufficient_quantity",
+                    f"批次 #{batch.batch_no:04d} 无法切出 {count} 片 {long}×{short}mm。",
+                    {"batch_id": batch.id, "requested": count},
+                )
             remaining = step.remainder
         remnant = geometry.remnant_payload(remaining, project.min_usable_mm)
         action = alloc.get("remnant_action")
@@ -208,13 +210,13 @@ def _do_confirm(
                 )
 
         before_qty = batch.quantity
-        after_qty = before_qty - count
+        after_qty = before_qty - 1
         stmt = (
             update(InventoryBatch)
             .where(
                 InventoryBatch.id == batch.id,
                 InventoryBatch.version == batch.version,
-                InventoryBatch.quantity >= count,
+                InventoryBatch.quantity >= 1,
                 InventoryBatch.status == "available",
             )
             .values(
@@ -240,9 +242,9 @@ def _do_confirm(
                     root_batch_id=batch.root_batch_id,
                     sequence=sequence,
                     type="usage",
-                    quantity_delta=-1,
-                    quantity_before=before_qty - i,
-                    quantity_after=before_qty - i - 1,
+                    quantity_delta=-1 if i == 0 else 0,
+                    quantity_before=before_qty if i == 0 else after_qty,
+                    quantity_after=after_qty,
                     width_before_mm=batch.width_mm,
                     height_before_mm=batch.height_mm,
                     width_after_mm=batch.width_mm,
@@ -274,9 +276,9 @@ def _do_confirm(
                     root_batch_id=produced.root_batch_id,
                     sequence=sequence,
                     type="cut_remnant",
-                    quantity_delta=count,
+                    quantity_delta=1,
                     quantity_before=0,
-                    quantity_after=count,
+                    quantity_after=1,
                     width_before_mm=batch.width_mm,
                     height_before_mm=batch.height_mm,
                     width_after_mm=produced.width_mm,
@@ -327,8 +329,8 @@ def _do_confirm(
                 )
             )
 
-        piece_waste = max(0, batch.area_mm2 - short * long)
-        total_waste += piece_waste * count
+        piece_waste = max(0, batch.area_mm2 - count * short * long)
+        total_waste += piece_waste
         results.append(
             {
                 "batch_id": batch.id,
@@ -340,7 +342,7 @@ def _do_confirm(
                 "remnant_action_label": REMNANT_LABELS.get(action or "", None),
                 "remnant": remnant,
                 "remnant_batch": batch_payload(produced, project.min_usable_mm) if produced else None,
-                "waste_mm2": piece_waste * count,
+                "waste_mm2": piece_waste,
                 "placement": preview["placement"],
                 "rotation": preview["rotation"],
                 "utilization": preview["utilization"],
@@ -484,8 +486,7 @@ def _rebuild_results(
                 "remnant_action_label": REMNANT_LABELS.get(first.remnant_action or "", None),
                 "remnant": None,
                 "remnant_batch": batch_payload(produced_batch, project.min_usable_mm) if produced_batch else None,
-                "waste_mm2": max(0, (batch.area_mm2 if batch else 0) - usage.demand_length_mm * usage.demand_width_mm)
-                * len(rows),
+                "waste_mm2": max(0, (batch.area_mm2 if batch else 0) - len(rows) * usage.demand_length_mm * usage.demand_width_mm),
                 "quantity_before": first.quantity_before,
                 "quantity_after": rows[-1].quantity_after,
                 "trace_url": f"{settings.api_prefix}/projects/{project.id}/trace/{produced_batch.id if produced_batch else batch_id}",

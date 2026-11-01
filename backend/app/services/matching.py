@@ -151,19 +151,26 @@ def match(
     for cand in candidates:
         if remaining <= 0:
             break
-        take = min(remaining, cand["match"]["max_pieces"], cand["batch"]["quantity"])
-        if take <= 0:
-            continue
-        allocation.append(
-            {
-                "batch_id": cand["batch"]["id"],
-                "batch_no": cand["batch"]["batch_no"],
-                "quantity": take,
-                "cut_option": cand["match"]["cut_option"],
-                "remnant_action": "store" if cand["match"]["remnant"] else None,
-            }
-        )
-        remaining -= take
+        max_pieces = cand["match"]["max_pieces"]
+        blocks = cand["batch"]["quantity"]
+        # 一块余料能切 max_pieces 片需求，这个批次有 blocks 块，逐块分配。
+        # 之前这里 `min(remaining, max_pieces, quantity)` 把「块数」当「片数」用，
+        # 导致一块能切多片时要么少取、要么把片数当块数扣减，库存账对不上。
+        while remaining > 0 and blocks > 0:
+            take = min(remaining, max_pieces)
+            if take <= 0:
+                break
+            allocation.append(
+                {
+                    "batch_id": cand["batch"]["id"],
+                    "batch_no": cand["batch"]["batch_no"],
+                    "quantity": take,
+                    "cut_option": cand["match"]["cut_option"],
+                    "remnant_action": "store" if cand["match"]["remnant"] else None,
+                }
+            )
+            remaining -= take
+            blocks -= 1
 
     return {
         "demand": {
