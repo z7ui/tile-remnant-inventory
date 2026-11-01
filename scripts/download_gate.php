@@ -10,8 +10,10 @@ declare(strict_types=1);
 
 $path = $_SERVER['REQUEST_URI'] ?? '';
 $file = '';
-if (preg_match('#^/d/([A-Za-z0-9._-]+\.apk)$#', $path, $m)) {
-    $file = $m[1];
+// URL 里故意不带 .apk 后缀：微信会按后缀拦截以 .apk 结尾的链接，
+// 去掉后缀后微信才会正常加载本页，从而看到引导。
+if (preg_match('#^/d/([A-Za-z0-9._-]+)$#', $path, $m)) {
+    $file = $m[1] . '.apk';
 }
 
 $real = '/opt/apps-archive/downloads/' . $file;
