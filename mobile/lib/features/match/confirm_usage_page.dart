@@ -384,7 +384,7 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      '利用率 ${preview == null ? '—' : '${((preview.utilization ?? 0) * 100).toStringAsFixed(0)}%'} · 浪费 ${formatArea((preview?.wasteMm2 ?? 0) * widget.quantity)}',
+                      '利用率 ${_batch.areaMm2 > 0 ? '${((pieceArea * widget.quantity / _batch.areaMm2).clamp(0.0, 1.0) * 100).toStringAsFixed(0)}%' : '—'} · 浪费 ${formatArea(_batch.areaMm2 - pieceArea * widget.quantity)}',
                       style: TextStyle(
                           fontSize: 12.5, color: AppColors.sub(context)),
                     ),

@@ -75,7 +75,11 @@ def evaluate_batch(
     max_pieces = geometry.pieces_available(region, w, h, demand_short, demand_long, cap, best["cut_option"])
     stock_area = batch.area_mm2
     demand_area = demand_short * demand_long
-    waste = max(0, stock_area - demand_area)
+    # 按「切满 max_pieces 片」算浪费，而不是只算 1 片：
+    # 600×1200 切 600×600 能切 2 片正好用完，利用率应 100%、浪费 0；
+    # 之前按单片算会显示利用率 50%、浪费半块。
+    used_area = max_pieces * demand_area
+    waste = max(0, stock_area - used_area)
 
     return {
         "batch": batch_payload(batch, min_usable_mm),
@@ -91,7 +95,7 @@ def evaluate_batch(
         "match": {
             "waste_mm2": waste,
             "waste_ratio": round(waste / stock_area, 4) if stock_area else 0.0,
-            "utilization": round(demand_area / stock_area, 4) if stock_area else 0.0,
+            "utilization": round(min(1.0, used_area / stock_area), 4) if stock_area else 0.0,
             "rotation": best["rotation"],
             "cut_option": best["cut_option"],
             "cut_option_label": "长边切到底" if best["cut_option"] == "long_side_cut" else "短边切到底",

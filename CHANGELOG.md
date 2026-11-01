@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.27] - 2026-11-02
+
+### Fixed
+
+#### 后端
+- 匹配结果的「利用率 / 浪费」改为按「切满可切片数」计算，之前按单片算，
+  导致 600×1200 切两片 600×600（正好用完）显示成利用率 50%、浪费半块。
+
+#### 移动端（Flutter）
+- 确认使用页的利用率 / 浪费同样按实际片数计算，与匹配结果一致。
+
 ## [0.1.26] - 2026-11-02
 
 ### Fixed
