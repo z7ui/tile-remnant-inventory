@@ -27,6 +27,11 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
   final TextEditingController _width = TextEditingController();
   final TextEditingController _quantity = TextEditingController(text: '1');
   final TextEditingController _location = TextEditingController();
+  // 三个输入框的焦点自己管：键盘上的「下一步」按顺序走 长边 → 短边 → 片数，
+  // 连续入库后也要能把光标送回长边。
+  final FocusNode _lengthFocus = FocusNode();
+  final FocusNode _widthFocus = FocusNode();
+  final FocusNode _quantityFocus = FocusNode();
   final TextEditingController _note = TextEditingController();
 
   String _unit = 'mm';
@@ -54,6 +59,9 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
     _width.dispose();
     _quantity.dispose();
     _location.dispose();
+    _lengthFocus.dispose();
+    _widthFocus.dispose();
+    _quantityFocus.dispose();
     _note.dispose();
     super.dispose();
   }
@@ -129,6 +137,8 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
           _widthError = null;
           _formError = null;
         });
+        // 清空后光标留在短边会让人以为该先填短边，其实顺序是长边优先
+        _lengthFocus.requestFocus();
         showSnack(
           context,
           '已入库 $submittedPieces 片 · $submittedSize${place.isEmpty ? '' : ' · $place'}',
@@ -168,9 +178,14 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
           children: <Widget>[
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xxl),
+                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg,
+                    AppSpacing.lg, AppSpacing.xxl),
                 children: <Widget>[
                   DimensionInput(
+                    lengthFocus: _lengthFocus,
+                    widthFocus: _widthFocus,
+                    onLengthSubmitted: () => _widthFocus.requestFocus(),
+                    onWidthSubmitted: () => _quantityFocus.requestFocus(),
                     lengthController: _length,
                     widthController: _width,
                     unit: _unit,

@@ -26,6 +26,20 @@ wp cache flush --allow-root && redis-cli FLUSHALL
 bash scripts/sync_app_apks.sh --check
 ```
 
+### 大包别走脚本下载
+
+服务器和本机访问 GitHub 都只有 10–20 KB/s，37MB 的余砖管家要下十几分钟。
+它本来就有本地构建产物，直接传更快：
+
+```bash
+ssh ... 'cat > /opt/apps-archive/downloads/tile-remnant-0.1.15.apk' \
+  < mobile/build/app/outputs/flutter-apk/app-release.apk
+ssh ... 'cd /opt/apps-archive/downloads && ls -1 tile-remnant-*.apk \
+  | grep -v "^tile-remnant-0.1.15.apk$" | xargs -r rm -f'
+```
+
+其余几个（<6MB）用脚本没问题。
+
 ## 命名规则
 
 统一 `<前缀>-<版本>.apk`，版本取自 GitHub tag 去掉 `V` 前缀：

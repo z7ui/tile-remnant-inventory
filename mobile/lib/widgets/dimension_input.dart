@@ -17,6 +17,10 @@ class DimensionInput extends StatelessWidget {
     this.lengthLabel = '长边',
     this.widthLabel = '短边',
     this.autofocus = false,
+    this.lengthFocus,
+    this.widthFocus,
+    this.onLengthSubmitted,
+    this.onWidthSubmitted,
   });
 
   final TextEditingController lengthController;
@@ -30,6 +34,13 @@ class DimensionInput extends StatelessWidget {
   final String widthLabel;
   final bool autofocus;
 
+  /// 焦点交给外部管理：连续入库后要能主动把光标送回长边，
+  /// 否则清空后光标停在短边，用户得手点长边才能接着录。
+  final FocusNode? lengthFocus;
+  final FocusNode? widthFocus;
+  final VoidCallback? onLengthSubmitted;
+  final VoidCallback? onWidthSubmitted;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -38,20 +49,30 @@ class DimensionInput extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Expanded(child: _field(context, lengthController, lengthLabel, lengthError, autofocus)),
+            Expanded(
+                child: _field(context, lengthController, lengthLabel,
+                    lengthError, autofocus,
+                    focusNode: lengthFocus, onSubmitted: onLengthSubmitted)),
             Padding(
               padding: const EdgeInsets.only(top: 24, left: 6, right: 6),
-              child: Text('×', style: TextStyle(fontSize: 22, color: AppColors.sub(context))),
+              child: Text('×',
+                  style:
+                      TextStyle(fontSize: 22, color: AppColors.sub(context))),
             ),
-            Expanded(child: _field(context, widthController, widthLabel, widthError, false)),
+            Expanded(
+                child: _field(
+                    context, widthController, widthLabel, widthError, false,
+                    focusNode: widthFocus, onSubmitted: onWidthSubmitted)),
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: IconButton(
                 onPressed: onSwap,
                 tooltip: '交换长宽',
                 iconSize: 24,
-                constraints: const BoxConstraints(minWidth: AppSizes.minTouch, minHeight: AppSizes.minTouch),
-                icon: Icon(Icons.swap_horiz_rounded, color: AppColors.accent(context)),
+                constraints: const BoxConstraints(
+                    minWidth: AppSizes.minTouch, minHeight: AppSizes.minTouch),
+                icon: Icon(Icons.swap_horiz_rounded,
+                    color: AppColors.accent(context)),
               ),
             ),
           ],
@@ -66,7 +87,8 @@ class DimensionInput extends StatelessWidget {
               ],
               selected: <String>{unit},
               showSelectedIcon: false,
-              onSelectionChanged: (Set<String> selection) => onUnitChanged(selection.first),
+              onSelectionChanged: (Set<String> selection) =>
+                  onUnitChanged(selection.first),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -82,19 +104,33 @@ class DimensionInput extends StatelessWidget {
     );
   }
 
-  Widget _field(BuildContext context, TextEditingController controller, String label, String? error, bool autofocus) {
+  Widget _field(
+    BuildContext context,
+    TextEditingController controller,
+    String label,
+    String? error,
+    bool autofocus, {
+    FocusNode? focusNode,
+    VoidCallback? onSubmitted,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.only(left: 2, bottom: 6),
-          child: Text(label, style: TextStyle(fontSize: 13, color: AppColors.sub(context), fontWeight: FontWeight.w600)),
+          child: Text(label,
+              style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.sub(context),
+                  fontWeight: FontWeight.w600)),
         ),
         TextField(
           controller: controller,
+          focusNode: focusNode,
           autofocus: autofocus,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           textInputAction: TextInputAction.next,
+          onSubmitted: (_) => onSubmitted?.call(),
           textAlign: TextAlign.center,
           inputFormatters: <TextInputFormatter>[
             FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
@@ -116,12 +152,19 @@ class DimensionInput extends StatelessWidget {
 
 /// Stepper + direct input for piece counts.
 class QuantityInput extends StatelessWidget {
-  const QuantityInput({super.key, required this.controller, this.min = 1, this.max = 20000, this.onChanged});
+  const QuantityInput(
+      {super.key,
+      required this.controller,
+      this.min = 1,
+      this.max = 20000,
+      this.onChanged,
+      this.focusNode});
 
   final TextEditingController controller;
   final int min;
   final int max;
   final ValueChanged<int>? onChanged;
+  final FocusNode? focusNode;
 
   int get _value => int.tryParse(controller.text) ?? min;
 
@@ -145,6 +188,7 @@ class QuantityInput extends StatelessWidget {
         Expanded(
           child: TextField(
             controller: controller,
+            focusNode: focusNode,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
             inputFormatters: <TextInputFormatter>[
@@ -152,7 +196,8 @@ class QuantityInput extends StatelessWidget {
               LengthLimitingTextInputFormatter(6),
             ],
             style: numberStyle(context, size: 24),
-            onChanged: (String value) => onChanged?.call(int.tryParse(value) ?? min),
+            onChanged: (String value) =>
+                onChanged?.call(int.tryParse(value) ?? min),
             decoration: const InputDecoration(suffixText: '片'),
           ),
         ),
