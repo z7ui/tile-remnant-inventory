@@ -17,7 +17,11 @@ import 'confirm_usage_page.dart';
 import '../trace/trace_page.dart';
 
 class MatchPage extends StatefulWidget {
-  const MatchPage({super.key, required this.api, required this.reloadToken, required this.onChanged});
+  const MatchPage(
+      {super.key,
+      required this.api,
+      required this.reloadToken,
+      required this.onChanged});
 
   final ProjectApi api;
   final int reloadToken;
@@ -46,7 +50,8 @@ class _MatchPageState extends State<MatchPage> {
     if (_prefsLoaded) return;
     _prefsLoaded = true;
     final Session session = SessionScope.of(context);
-    _unit = session.prefs.unitFor(widget.api.project.id, widget.api.project.defaultUnit);
+    _unit = session.prefs
+        .unitFor(widget.api.project.id, widget.api.project.defaultUnit);
   }
 
   @override
@@ -117,7 +122,8 @@ class _MatchPageState extends State<MatchPage> {
   }
 
   Future<void> _use(MatchCandidate candidate) async {
-    final int take = math.min(_pieces, math.min(candidate.maxPieces, candidate.batch.quantity));
+    final int take = math.min(
+        _pieces, math.min(candidate.maxPieces, candidate.batch.quantity));
     final bool? done = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => ConfirmUsagePage(
@@ -146,7 +152,10 @@ class _MatchPageState extends State<MatchPage> {
   Future<void> _openTrace(MatchCandidate candidate) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => TracePage(api: widget.api, batchId: candidate.batch.id, title: candidate.batch.code),
+        builder: (_) => TracePage(
+            api: widget.api,
+            batchId: candidate.batch.id,
+            title: candidate.batch.code),
       ),
     );
   }
@@ -158,7 +167,8 @@ class _MatchPageState extends State<MatchPage> {
     return Scaffold(
       appBar: buildAppBar(context, '快速匹配'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xxl),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xxl),
         children: <Widget>[
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -170,7 +180,8 @@ class _MatchPageState extends State<MatchPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const SectionTitle(title: '需要多大', subtitle: '允许旋转 90°，需求必须被余砖完全覆盖'),
+                const SectionTitle(
+                    title: '需要多大', subtitle: '允许旋转 90°，需求必须被余砖完全覆盖'),
                 DimensionInput(
                   lengthController: _length,
                   widthController: _width,
@@ -178,14 +189,20 @@ class _MatchPageState extends State<MatchPage> {
                   lengthError: _lengthError,
                   widthError: _widthError,
                   onSwap: _swap,
-                  onUnitChanged: (String value) => setState(() => _unit = value),
+                  onUnitChanged: (String value) =>
+                      setState(() => _unit = value),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: <Widget>[
-                    Text('数量', style: TextStyle(fontSize: 13, color: AppColors.sub(context))),
+                    Text('数量',
+                        style: TextStyle(
+                            fontSize: 13, color: AppColors.sub(context))),
                     const SizedBox(width: AppSpacing.md),
-                    Expanded(child: QuantityInput(controller: _quantity, onChanged: (_) => setState(() {}))),
+                    Expanded(
+                        child: QuantityInput(
+                            controller: _quantity,
+                            onChanged: (_) => setState(() {}))),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -232,15 +249,22 @@ class _MatchPageState extends State<MatchPage> {
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: (shortage ? AppColors.warning : AppColors.success).withValues(alpha: 0.08),
+            color: (shortage ? AppColors.warning : AppColors.success)
+                .withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(AppRadius.control),
-            border: Border.all(color: (shortage ? AppColors.warning : AppColors.success).withValues(alpha: 0.32)),
+            border: Border.all(
+                color: (shortage ? AppColors.warning : AppColors.success)
+                    .withValues(alpha: 0.32)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Icon(shortage ? Icons.warning_amber_rounded : Icons.check_circle_outline,
-                  size: 20, color: shortage ? AppColors.warning : AppColors.success),
+              Icon(
+                  shortage
+                      ? Icons.warning_amber_rounded
+                      : Icons.check_circle_outline,
+                  size: 20,
+                  color: shortage ? AppColors.warning : AppColors.success),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
@@ -297,8 +321,10 @@ class _CandidateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Batch batch = candidate.batch;
-    final int take = math.min(demandQuantity, math.min(candidate.maxPieces, batch.quantity));
-    final String utilization = '${(candidate.utilization * 100).toStringAsFixed(0)}%';
+    final int take =
+        math.min(demandQuantity, math.min(candidate.maxPieces, batch.quantity));
+    final String utilization =
+        '${(candidate.utilization * 100).toStringAsFixed(0)}%';
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -318,15 +344,30 @@ class _CandidateCard extends StatelessWidget {
             runSpacing: 4,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
-              Text(batch.code, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.sub(context))),
-              if (batch.isLShape) Tag(label: 'L 形', color: AppColors.remnant) else Tag(label: '矩形', color: AppColors.primary),
-              Tag(label: '剩 ${batch.quantity} 片', color: AppColors.sub(context)),
+              Text(batch.code,
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.sub(context))),
+              if (batch.isLShape)
+                Tag(label: 'L 形', color: AppColors.remnant)
+              else
+                Tag(label: '矩形', color: AppColors.primary),
+              Tag(
+                  label: '剩 ${batch.quantity} 片',
+                  color: AppColors.sub(context)),
               // 这块料是之前切砖切出来的，不是新买的整砖——匹配到它时要说清楚，
               // 否则用户会纳闷"我什么时候有这块"。
               if (batch.sourceType == 'cut')
-                Tag(label: '切砖余料', color: AppColors.success, icon: Icons.content_cut),
+                Tag(
+                    label: '切砖余料',
+                    color: AppColors.success,
+                    icon: Icons.content_cut),
               if (candidate.rotation == 90)
-                Tag(label: '旋转 90°', color: AppColors.warning, icon: Icons.rotate_90_degrees_ccw),
+                Tag(
+                    label: '旋转 90°',
+                    color: AppColors.warning,
+                    icon: Icons.rotate_90_degrees_ccw),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -343,7 +384,9 @@ class _CandidateCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: <Widget>[
-              _Metric(label: '原砖', value: formatSize(batch.widthMm, batch.heightMm, unit)),
+              _Metric(
+                  label: '原砖',
+                  value: formatSize(batch.widthMm, batch.heightMm, unit)),
               _Metric(label: '浪费', value: formatArea(candidate.wasteMm2)),
               _Metric(label: '利用率', value: utilization),
               _Metric(label: '可切', value: '${candidate.maxPieces} 片'),
@@ -356,8 +399,11 @@ class _CandidateCard extends StatelessWidget {
             children: candidate.cutOptions
                 .map(
                   (CutOptionPreview option) => Tag(
-                    label: option.feasible ? option.label : '${option.label}·不可用',
-                    color: option.feasible ? AppColors.primary : AppColors.disabled,
+                    label:
+                        option.feasible ? option.label : '${option.label}·不可用',
+                    color: option.feasible
+                        ? AppColors.primary
+                        : AppColors.disabled,
                     icon: option.feasible ? Icons.content_cut : Icons.block,
                   ),
                 )
@@ -413,7 +459,8 @@ class _Metric extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(label, style: TextStyle(fontSize: 11.5, color: AppColors.sub(context))),
+          Text(label,
+              style: TextStyle(fontSize: 11.5, color: AppColors.sub(context))),
           const SizedBox(height: 2),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -424,7 +471,9 @@ class _Metric extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: AppColors.label(context),
-                fontFeatures: const <ui.FontFeature>[ui.FontFeature.tabularFigures()],
+                fontFeatures: const <ui.FontFeature>[
+                  ui.FontFeature.tabularFigures()
+                ],
               ),
             ),
           ),

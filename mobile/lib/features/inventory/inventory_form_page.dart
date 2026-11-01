@@ -12,7 +12,8 @@ import '../../widgets/tile_shape_preview.dart';
 
 /// Manual stock-in. Rectangles only — long, width, pieces.
 class InventoryFormPage extends StatefulWidget {
-  const InventoryFormPage({super.key, required this.api, this.knownLocations = const <String>[]});
+  const InventoryFormPage(
+      {super.key, required this.api, this.knownLocations = const <String>[]});
 
   final ProjectApi api;
   final List<String> knownLocations;
@@ -41,7 +42,8 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
     if (_prefsLoaded) return;
     _prefsLoaded = true;
     final Session session = SessionScope.of(context);
-    _unit = session.prefs.unitFor(widget.api.project.id, widget.api.project.defaultUnit);
+    _unit = session.prefs
+        .unitFor(widget.api.project.id, widget.api.project.defaultUnit);
     final String? last = session.prefs.lastLocation(widget.api.project.id);
     if (last != null && last.isNotEmpty) _location.text = last;
   }
@@ -90,7 +92,8 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
     });
     final Session session = SessionScope.of(context);
     final int submittedPieces = _pieces;
-    final String submittedSize = formatSize(_widthMm ?? 0, _lengthMm ?? 0, _unit);
+    final String submittedSize =
+        formatSize(_widthMm ?? 0, _lengthMm ?? 0, _unit);
     try {
       await widget.api.createBatch(
         length: _length.text,
@@ -165,7 +168,7 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
           children: <Widget>[
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xxl),
                 children: <Widget>[
                   DimensionInput(
                     lengthController: _length,
@@ -181,6 +184,12 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                       _widthError = null;
                     }),
                   ),
+                  // 长/宽/片数是最关键的三项，必须能在一屏里填完。
+                  // 之前片数排在提示框后面，键盘一弹就被顶到屏幕外，点都点不到。
+                  const SizedBox(height: AppSpacing.md),
+                  const SectionTitle(title: '片数'),
+                  QuantityInput(
+                      controller: _quantity, onChanged: (_) => setState(() {})),
                   const SizedBox(height: AppSpacing.lg),
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.md),
@@ -200,20 +209,21 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                             children: <Widget>[
                               // 原来是 Icons.crop_square——一个空心方框，看着像「可选的选项框」，
                               // 其实只是装饰，用户点了当然没反应。换成信息图标，明确是提示。
-                              Icon(Icons.info_outline, size: 18, color: AppColors.sub(context)),
+                              Icon(Icons.info_outline,
+                                  size: 18, color: AppColors.sub(context)),
                               const SizedBox(width: AppSpacing.sm),
                               Expanded(
                                 child: Text(
                                   '主动录入只支持矩形；异形（L 形）余料只能来自切割后入库。',
-                                  style: TextStyle(fontSize: 12.5, height: 1.45, color: AppColors.sub(context)),
+                                  style: TextStyle(
+                                      fontSize: 12.5,
+                                      height: 1.45,
+                                      color: AppColors.sub(context)),
                                 ),
                               ),
                             ],
                           ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  const SectionTitle(title: '片数'),
-                  QuantityInput(controller: _quantity, onChanged: (_) => setState(() {})),
                   const SizedBox(height: AppSpacing.lg),
                   const SectionTitle(title: '存放位置', subtitle: '方便以后找砖，可留空'),
                   TextField(
@@ -235,7 +245,8 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                           .map(
                             (String location) => ActionChip(
                               label: Text(location),
-                              onPressed: () => setState(() => _location.text = location),
+                              onPressed: () =>
+                                  setState(() => _location.text = location),
                             ),
                           )
                           .toList(growable: false),
@@ -247,7 +258,8 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                     controller: _note,
                     maxLines: 3,
                     maxLength: 200,
-                    decoration: const InputDecoration(hintText: '例如：同批次 800×800 抛光砖'),
+                    decoration:
+                        const InputDecoration(hintText: '例如：同批次 800×800 抛光砖'),
                   ),
                   if (_formError != null) ...<Widget>[
                     const SizedBox(height: AppSpacing.md),
@@ -256,31 +268,35 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                 ],
               ),
             ),
-            BottomActionBar(
-              hint: hint,
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: SizedBox(
-                      height: AppSizes.primaryButton,
-                      child: OutlinedButton(
-                        onPressed: _submitting ? null : () => _submit(stay: true),
-                        child: const Text('连续入库'),
+            // 键盘弹出时收起底部按钮：它贴着键盘占掉近 80dp，
+            // 把「片数」等输入框挤出可视区。收起键盘后按钮自动回来。
+            if (MediaQuery.of(context).viewInsets.bottom == 0)
+              BottomActionBar(
+                hint: hint,
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: SizedBox(
+                        height: AppSizes.primaryButton,
+                        child: OutlinedButton(
+                          onPressed:
+                              _submitting ? null : () => _submit(stay: true),
+                          child: const Text('连续入库'),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    flex: 2,
-                    child: PrimaryButton(
-                      label: '确认入库并返回',
-                      loading: _submitting,
-                      onPressed: () => _submit(stay: false),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      flex: 2,
+                      child: PrimaryButton(
+                        label: '确认入库并返回',
+                        loading: _submitting,
+                        onPressed: () => _submit(stay: false),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),

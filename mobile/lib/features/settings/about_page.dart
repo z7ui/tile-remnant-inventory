@@ -124,7 +124,8 @@ class _AboutPageState extends State<AboutPage> {
   Widget build(BuildContext context) {
     final Session session = SessionScope.of(context);
     final String deviceId = session.deviceId ?? '未注册';
-    final String shortId = deviceId.length > 10 ? deviceId.substring(0, 10) : deviceId;
+    final String shortId =
+        deviceId.length > 10 ? deviceId.substring(0, 10) : deviceId;
 
     return Scaffold(
       appBar: buildAppBar(context, '关于'),
@@ -143,19 +144,23 @@ class _AboutPageState extends State<AboutPage> {
                       color: AppColors.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: const Icon(Icons.grid_view_rounded, size: 38, color: AppColors.primary),
+                    child: const Icon(Icons.grid_view_rounded,
+                        size: 38, color: AppColors.primary),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  Text('余砖管家', style: Theme.of(context).textTheme.headlineSmall),
+                  Text('余砖管家',
+                      style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 2),
                   Text(
                     '装修瓷砖余料库存与匹配',
-                    style: TextStyle(fontSize: 13, color: AppColors.sub(context)),
+                    style:
+                        TextStyle(fontSize: 13, color: AppColors.sub(context)),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     'v${AppConfig.appVersion}',
-                    style: TextStyle(fontSize: 12.5, color: AppColors.sub(context)),
+                    style: TextStyle(
+                        fontSize: 12.5, color: AppColors.sub(context)),
                   ),
                 ],
               ),
@@ -165,7 +170,11 @@ class _AboutPageState extends State<AboutPage> {
             const SectionTitle(title: '数据服务器', subtitle: '库存和流水都存在这里'),
             _InfoCard(
               rows: <Widget>[
-                _Row(label: '服务地址', value: AppConfig.defaultBaseUrl, mono: true, selectable: true),
+                _Row(
+                    label: '服务地址',
+                    value: AppConfig.defaultBaseUrl,
+                    mono: true,
+                    selectable: true),
                 _Row(
                   label: '状态',
                   value: _checking
@@ -175,12 +184,15 @@ class _AboutPageState extends State<AboutPage> {
                           : '正常${_latencyMs != null ? ' · ${_latencyMs}ms' : ''}'),
                   valueColor: _checking
                       ? AppColors.sub(context)
-                      : (_serverError != null ? AppColors.danger : AppColors.success),
+                      : (_serverError != null
+                          ? AppColors.danger
+                          : AppColors.success),
                 ),
                 if (_serverVersion != null)
                   _Row(
                     label: '服务版本',
-                    value: 'v$_serverVersion${_serverEnv != null ? ' · $_serverEnv' : ''}',
+                    value:
+                        'v$_serverVersion${_serverEnv != null ? ' · $_serverEnv' : ''}',
                   ),
               ],
             ),
@@ -198,7 +210,10 @@ class _AboutPageState extends State<AboutPage> {
             const SectionTitle(title: '版本更新', subtitle: '新版本从工地服务器直接下载'),
             _InfoCard(
               rows: <Widget>[
-                _Row(label: '当前版本', value: 'v${AppConfig.appVersion}（构建 ${AppConfig.buildNumber}）'),
+                _Row(
+                    label: '当前版本',
+                    value:
+                        'v${AppConfig.appVersion}（构建 ${AppConfig.buildNumber}）'),
                 if (_latest != null)
                   _Row(
                     label: '线上版本',
@@ -206,11 +221,16 @@ class _AboutPageState extends State<AboutPage> {
                         ? '发现新版本 v${_latest!['version'] ?? '?'}'
                             '${_fmtSize(_latest!['size']).isEmpty ? '' : ' · ${_fmtSize(_latest!['size'])}'}'
                         : '已是最新版本',
-                    valueColor: _hasUpdate ? AppColors.primary : AppColors.success,
+                    valueColor:
+                        _hasUpdate ? AppColors.primary : AppColors.success,
                   ),
                 if (_updateError != null)
-                  _Row(label: '检查失败', value: _updateError!, valueColor: AppColors.danger),
-                if (_hasUpdate && (_latest!['notes']?.toString().trim().isNotEmpty ?? false))
+                  _Row(
+                      label: '检查失败',
+                      value: _updateError!,
+                      valueColor: AppColors.danger),
+                if (_hasUpdate &&
+                    (_latest!['notes']?.toString().trim().isNotEmpty ?? false))
                   _Row(label: '更新内容', value: _latest!['notes'].toString()),
               ],
             ),
@@ -224,7 +244,8 @@ class _AboutPageState extends State<AboutPage> {
                   onPressed: _downloadUpdate,
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
-                    textStyle: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
+                    textStyle: const TextStyle(
+                        fontSize: 15.5, fontWeight: FontWeight.w600),
                   ),
                   icon: const Icon(Icons.download, size: 20),
                   label: Text(
@@ -240,7 +261,10 @@ class _AboutPageState extends State<AboutPage> {
               child: TextButton.icon(
                 onPressed: _checkingUpdate ? null : _checkUpdate,
                 icon: _checkingUpdate
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.system_update_alt, size: 18),
                 label: Text(_checkingUpdate ? '检查中…' : '检查更新'),
               ),
@@ -250,7 +274,11 @@ class _AboutPageState extends State<AboutPage> {
             const SectionTitle(title: '本机身份', subtitle: '不需要注册账号'),
             _InfoCard(
               rows: <Widget>[
-                _Row(label: '本机编号', value: shortId, mono: true, selectable: true),
+                _Row(
+                    label: '本机编号',
+                    value: shortId,
+                    mono: true,
+                    selectable: true),
                 const _Row(label: '说明', value: '长按可复制。遇到问题时把这串编号发给管理员，方便定位。'),
               ],
             ),
@@ -276,7 +304,8 @@ class _AboutPageState extends State<AboutPage> {
             const SizedBox(height: AppSpacing.lg),
             Text(
               '库存、流水和溯源记录都保存在工地的服务器上，不会上传到任何第三方。',
-              style: TextStyle(fontSize: 12, height: 1.5, color: AppColors.sub(context)),
+              style: TextStyle(
+                  fontSize: 12, height: 1.5, color: AppColors.sub(context)),
             ),
             const SizedBox(height: AppSpacing.lg),
           ],
@@ -294,7 +323,8 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.card(context),
         borderRadius: BorderRadius.circular(AppRadius.card),
@@ -335,7 +365,9 @@ class _Row extends StatelessWidget {
         children: <Widget>[
           SizedBox(
             width: 76,
-            child: Text(label, style: TextStyle(fontSize: 12.5, color: AppColors.sub(context))),
+            child: Text(label,
+                style:
+                    TextStyle(fontSize: 12.5, color: AppColors.sub(context))),
           ),
           Expanded(
             child: selectable
@@ -358,7 +390,8 @@ class _LinkRow extends StatelessWidget {
   final String url;
 
   Future<void> _open(BuildContext context) async {
-    final bool ok = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    final bool ok =
+        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
       showSnack(context, '没有可用的浏览器打开这个链接', error: true);
     }
@@ -376,7 +409,9 @@ class _LinkRow extends StatelessWidget {
           children: <Widget>[
             SizedBox(
               width: 76,
-              child: Text(label, style: TextStyle(fontSize: 12.5, color: AppColors.sub(context))),
+              child: Text(label,
+                  style:
+                      TextStyle(fontSize: 12.5, color: AppColors.sub(context))),
             ),
             Expanded(
               child: Text(
@@ -393,7 +428,8 @@ class _LinkRow extends StatelessWidget {
             const SizedBox(width: 6),
             const Padding(
               padding: EdgeInsets.only(top: 1),
-              child: Icon(Icons.open_in_new, size: 15, color: AppColors.primary),
+              child:
+                  Icon(Icons.open_in_new, size: 15, color: AppColors.primary),
             ),
           ],
         ),
