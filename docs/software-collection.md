@@ -1,6 +1,6 @@
 # 软件合集：我做的几个 Android 小工具
 
-都是自己用着不顺手、索性自己做的东西。全部开源，APK 也全部放在这台服务器上——不用去 GitHub 翻 Release，点一下就能下。
+都是自己用着不顺手、索性自己做的东西。除清抖（针对抖音的模块，不外发安装包）之外，其余全部开源，安装包也放在这台服务器上——不用去 GitHub 翻 Release，点一下就能下。
 
 装之前有两点通用提醒：都是 **debug 或自签 release 签名**，装的时候系统会提示"未知来源"，允许即可；互相之间没有依赖，但两个 PIN 滑动输入**同一台机器只能装一个**。
 
@@ -21,8 +21,8 @@ LSPosed 模块，作用域只有抖音。核心不是"屏蔽广告"，而是**�
 
 - 版本 0.72
 - 文章：[清抖：给抖音的界面做一层会看状态的「减负」](https://www.z7ui.cn/qingdou-ui/)
-- 源码：暂不公开（涉及抖音界面结构，留着省事）
-- 下载：[qingdou-0.72-release.apk](https://www.z7ui.cn/apps-archive/downloads/qingdou-0.72-release.apk)
+- 源码：不公开
+- 安装包：**不提供**（针对抖音的模块，不对外分发）
 
 ## 边触 EdgePad · 单手操作
 
@@ -31,7 +31,7 @@ LSPosed 模块，作用域只有抖音。核心不是"屏蔽广告"，而是**�
 - 版本 0.2
 - 文章：[边触：把三星的单手操作搬到小米，卡在了系统手势这道墙上](https://www.z7ui.cn/edgepad/)
 - 源码：[github.com/z7ui/edgepad](https://github.com/z7ui/edgepad)
-- 下载：[edgepad-0.2-release.apk](https://www.z7ui.cn/apps-archive/downloads/edgepad-0.2-release.apk)
+- 下载：[edgepad-0.2.apk](https://www.z7ui.cn/apps-archive/downloads/edgepad-0.2.apk)
 
 ## 规则树 RuleTree · 可视化的「如果…则…否则」
 
@@ -40,7 +40,7 @@ LSPosed 模块，作用域只有抖音。核心不是"屏蔽广告"，而是**�
 - 版本 0.12
 - 文章：[规则树：把「如果……则……否则」做成能存下来的东西](https://www.z7ui.cn/ruletree/)
 - 源码：[github.com/z7ui/ruletree](https://github.com/z7ui/ruletree)
-- 下载：[ruletree-0.12-release.apk](https://www.z7ui.cn/apps-archive/downloads/ruletree-0.12-release.apk)
+- 下载：[ruletree-0.12.apk](https://www.z7ui.cn/apps-archive/downloads/ruletree-0.12.apk)
 
 ## 定时快捷 RoutineX · 到点自己把事做了
 
@@ -49,7 +49,7 @@ LSPosed 模块，作用域只有抖音。核心不是"屏蔽广告"，而是**�
 - 版本 1.4
 - 文章：[定时快捷 RoutineX：让小米到点自己把签到点掉](https://www.z7ui.cn/routinex/)
 - 源码：[github.com/z7ui/routinex](https://github.com/z7ui/routinex)
-- 下载：[routinex-1.4-release.apk](https://www.z7ui.cn/apps-archive/downloads/routinex-1.4-release.apk)
+- 下载：[routinex-1.4.apk](https://www.z7ui.cn/apps-archive/downloads/routinex-1.4.apk)
 
 ## 幕布 Curtain · 一层可调的黑
 
