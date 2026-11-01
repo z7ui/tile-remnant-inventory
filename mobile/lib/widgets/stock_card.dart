@@ -24,14 +24,17 @@ class StockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accent = batch.isLShape ? AppColors.remnant : AppColors.primary;
+    final Color accent = batch.isIrregular
+        ? AppColors.warning
+        : (batch.isLShape ? AppColors.remnant : AppColors.primary);
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.card(context),
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(
-          color: highlight ? AppColors.accent(context) : AppColors.line(context),
+          color:
+              highlight ? AppColors.accent(context) : AppColors.line(context),
           width: highlight ? 1.8 : 1,
         ),
       ),
@@ -74,10 +77,22 @@ class StockCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              if (batch.isLShape) Tag(label: 'L 形', color: accent, icon: Icons.change_history) else Tag(label: '矩形', color: accent),
+                              if (batch.isIrregular)
+                                Tag(
+                                    label: '异形',
+                                    color: accent,
+                                    icon: Icons.dashboard_customize_outlined)
+                              else if (batch.isLShape)
+                                Tag(
+                                    label: 'L 形',
+                                    color: accent,
+                                    icon: Icons.change_history)
+                              else
+                                Tag(label: '矩形', color: accent),
                               const SizedBox(width: 4),
                               Tag(
-                                label: batch.sourceType == 'cut' ? '切割余料' : '原始录入',
+                                label:
+                                    batch.sourceType == 'cut' ? '切割余料' : '原始录入',
                                 color: AppColors.sub(context),
                               ),
                             ],
@@ -90,21 +105,25 @@ class StockCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             '面积 ${formatArea(batch.areaMm2)} · ${formatRelative(batch.createdAt)}',
-                            style: TextStyle(fontSize: 12.5, color: AppColors.sub(context)),
+                            style: TextStyle(
+                                fontSize: 12.5, color: AppColors.sub(context)),
                           ),
                           if (batch.location.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 2),
                               child: Row(
                                 children: <Widget>[
-                                  Icon(Icons.place_outlined, size: 14, color: AppColors.sub(context)),
+                                  Icon(Icons.place_outlined,
+                                      size: 14, color: AppColors.sub(context)),
                                   const SizedBox(width: 2),
                                   Flexible(
                                     child: Text(
                                       batch.location,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 12.5, color: AppColors.sub(context)),
+                                      style: TextStyle(
+                                          fontSize: 12.5,
+                                          color: AppColors.sub(context)),
                                     ),
                                   ),
                                 ],
@@ -116,8 +135,11 @@ class StockCard extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: <Widget>[
-                        Text('${batch.quantity}', style: numberStyle(context, size: 28)),
-                        Text('片', style: TextStyle(fontSize: 12, color: AppColors.sub(context))),
+                        Text('${batch.quantity}',
+                            style: numberStyle(context, size: 28)),
+                        Text('片',
+                            style: TextStyle(
+                                fontSize: 12, color: AppColors.sub(context))),
                       ],
                     ),
                   ],
@@ -128,7 +150,10 @@ class StockCard extends StatelessWidget {
                     if (batch.belowMinUsable)
                       const Padding(
                         padding: EdgeInsets.only(right: 6),
-                        child: Tag(label: '低于最小可用尺寸', color: AppColors.warning, icon: Icons.warning_amber_rounded),
+                        child: Tag(
+                            label: '低于最小可用尺寸',
+                            color: AppColors.warning,
+                            icon: Icons.warning_amber_rounded),
                       ),
                     const Spacer(),
                     TextButton.icon(
@@ -179,9 +204,10 @@ class _ThumbPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (batch.widthMm <= 0 || batch.heightMm <= 0) return;
-    final double scale = (size.width - 8) / batch.widthMm < (size.height - 8) / batch.heightMm
-        ? (size.width - 8) / batch.widthMm
-        : (size.height - 8) / batch.heightMm;
+    final double scale =
+        (size.width - 8) / batch.widthMm < (size.height - 8) / batch.heightMm
+            ? (size.width - 8) / batch.widthMm
+            : (size.height - 8) / batch.heightMm;
     final double w = batch.widthMm * scale;
     final double h = batch.heightMm * scale;
     final double ox = (size.width - w) / 2;
@@ -197,11 +223,14 @@ class _ThumbPainter extends CustomPainter {
       ..color = dark ? const Color(0xFF5A6672) : const Color(0xFFB7C2CF);
 
     final List<ShapeRect> rects = batch.rects.isEmpty
-        ? <ShapeRect>[ShapeRect(x: 0, y: 0, w: batch.widthMm, h: batch.heightMm)]
+        ? <ShapeRect>[
+            ShapeRect(x: 0, y: 0, w: batch.widthMm, h: batch.heightMm)
+          ]
         : batch.rects;
 
     final Rect bbox = Rect.fromLTWH(ox, oy, w, h);
-    canvas.drawRect(bbox, Paint()..color = dark ? const Color(0xFF1E1E1E) : Colors.white);
+    canvas.drawRect(
+        bbox, Paint()..color = dark ? const Color(0xFF1E1E1E) : Colors.white);
 
     for (final ShapeRect r in rects) {
       final Rect rect = Rect.fromLTWH(

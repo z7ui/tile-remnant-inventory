@@ -83,7 +83,11 @@ class InventoryFilter {
 
   String get summary {
     final List<String> parts = <String>[];
-    if (shapeType != null) parts.add(shapeType == 'l_shape' ? 'L 形' : '矩形');
+    if (shapeType != null) {
+      parts.add(shapeType == 'irregular'
+          ? '异形'
+          : (shapeType == 'l_shape' ? 'L 形' : '矩形'));
+    }
     if (sourceType != null) parts.add(sourceType == 'cut' ? '切割余料' : '原始录入');
     if (minQuantity != null || maxQuantity != null) parts.add('片数');
     if (minLongMm != null || maxLongMm != null) parts.add('尺寸');
@@ -258,7 +262,9 @@ class _InventoryPageState extends State<InventoryPage> {
 
   Future<void> _openTrace(Batch batch) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => TracePage(api: widget.api, batchId: batch.id, title: batch.code)),
+      MaterialPageRoute<void>(
+          builder: (_) =>
+              TracePage(api: widget.api, batchId: batch.id, title: batch.code)),
     );
   }
 
@@ -279,7 +285,8 @@ class _InventoryPageState extends State<InventoryPage> {
 
   void _onSearchChanged(String value) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () => _load(reset: true));
+    _debounce =
+        Timer(const Duration(milliseconds: 400), () => _load(reset: true));
   }
 
   @override
@@ -314,7 +321,8 @@ class _InventoryPageState extends State<InventoryPage> {
         child: ListView(
           controller: _scroll,
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xxl),
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xxl),
           children: <Widget>[
             _Overview(
               projectName: widget.api.project.name,
@@ -408,7 +416,8 @@ class _InventoryPageState extends State<InventoryPage> {
                 if (!_loading)
                   Text(
                     '${page?.total ?? 0} 个批次',
-                    style: TextStyle(fontSize: 12.5, color: AppColors.sub(context)),
+                    style: TextStyle(
+                        fontSize: 12.5, color: AppColors.sub(context)),
                   ),
               ],
             ),
@@ -421,7 +430,8 @@ class _InventoryPageState extends State<InventoryPage> {
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: ErrorBanner(message: _error!, onRetry: () => _load(reset: true)),
+                child: ErrorBanner(
+                    message: _error!, onRetry: () => _load(reset: true)),
               ),
             if (_loading)
               const SkeletonList(itemCount: 4)
@@ -465,7 +475,11 @@ class _InventoryPageState extends State<InventoryPage> {
               if (_loadingMore)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                  child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.4))),
+                  child: Center(
+                      child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2.4))),
                 ),
             ],
           ],
@@ -503,18 +517,23 @@ class _Overview extends StatelessWidget {
             projectName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+                color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: <Widget>[
               _Stat(value: '${stats.pieces}', label: '可用片数'),
               _Divider(),
-              _Stat(value: '${stats.availableBatches == 0 ? stats.batches : stats.availableBatches}', label: '可用批次'),
+              _Stat(
+                  value:
+                      '${stats.availableBatches == 0 ? stats.batches : stats.availableBatches}',
+                  label: '可用批次'),
               _Divider(),
               _Stat(value: '${stats.lShapeBatches}', label: '异形批次'),
               _Divider(),
-              _Stat(value: formatArea(stats.areaMm2), label: '总面积', small: true),
+              _Stat(
+                  value: formatArea(stats.areaMm2), label: '总面积', small: true),
             ],
           ),
         ],
@@ -545,12 +564,16 @@ class _Stat extends StatelessWidget {
                 color: Colors.white,
                 fontSize: small ? 16 : 24,
                 fontWeight: FontWeight.w700,
-                fontFeatures: const <ui.FontFeature>[ui.FontFeature.tabularFigures()],
+                fontFeatures: const <ui.FontFeature>[
+                  ui.FontFeature.tabularFigures()
+                ],
               ),
             ),
           ),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.86), fontSize: 11.5)),
+          Text(label,
+              style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.86), fontSize: 11.5)),
         ],
       ),
     );
@@ -570,7 +593,8 @@ class _Divider extends StatelessWidget {
 }
 
 class InventoryFilterSheet extends StatefulWidget {
-  const InventoryFilterSheet({super.key, required this.initial, required this.locations});
+  const InventoryFilterSheet(
+      {super.key, required this.initial, required this.locations});
 
   final InventoryFilter initial;
   final List<String> locations;
@@ -582,7 +606,8 @@ class InventoryFilterSheet extends StatefulWidget {
 class _InventoryFilterSheetState extends State<InventoryFilterSheet> {
   late String? _shape = widget.initial.shapeType;
   late String? _source = widget.initial.sourceType;
-  late String? _quantityBand = _bandFrom(widget.initial.minQuantity, widget.initial.maxQuantity);
+  late String? _quantityBand =
+      _bandFrom(widget.initial.minQuantity, widget.initial.maxQuantity);
   late String? _sizeBand = _sizeBandFrom(widget.initial.minLongMm);
   late String? _location = widget.initial.location;
   late String _sort = widget.initial.sort;
@@ -659,26 +684,66 @@ class _InventoryFilterSheetState extends State<InventoryFilterSheet> {
             children: <Widget>[
               Text('筛选', style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: AppSpacing.lg),
-              _group('形状', <String, String?>{'全部': null, '矩形': 'rectangle', 'L 形': 'l_shape'},
-                  _shape, (String? value) => setState(() => _shape = value)),
-              _group('来源', <String, String?>{'全部': null, '原始录入': 'manual', '切割余料': 'cut'},
-                  _source, (String? value) => setState(() => _source = value)),
-              _group('片数', <String, String?>{'全部': null, '1 片': 'one', '2–3 片': 'few', '4 片以上': 'many'},
-                  _quantityBand, (String? value) => setState(() => _quantityBand = value)),
-              _group('长边尺寸', <String, String?>{'全部': null, '≥ 80cm': 'large', '40–80cm': 'medium', '< 40cm': 'small'},
-                  _sizeBand, (String? value) => setState(() => _sizeBand = value)),
+              _group(
+                  '形状',
+                  <String, String?>{
+                    '全部': null,
+                    '矩形': 'rectangle',
+                    'L 形': 'l_shape',
+                    '异形': 'irregular'
+                  },
+                  _shape,
+                  (String? value) => setState(() => _shape = value)),
+              _group(
+                  '来源',
+                  <String, String?>{
+                    '全部': null,
+                    '原始录入': 'manual',
+                    '切割余料': 'cut'
+                  },
+                  _source,
+                  (String? value) => setState(() => _source = value)),
+              _group(
+                  '片数',
+                  <String, String?>{
+                    '全部': null,
+                    '1 片': 'one',
+                    '2–3 片': 'few',
+                    '4 片以上': 'many'
+                  },
+                  _quantityBand,
+                  (String? value) => setState(() => _quantityBand = value)),
+              _group(
+                  '长边尺寸',
+                  <String, String?>{
+                    '全部': null,
+                    '≥ 80cm': 'large',
+                    '40–80cm': 'medium',
+                    '< 40cm': 'small'
+                  },
+                  _sizeBand,
+                  (String? value) => setState(() => _sizeBand = value)),
               if (widget.locations.isNotEmpty)
                 _group(
                   '存放位置',
-                  <String, String?>{'全部': null, for (final String location in widget.locations) location: location},
+                  <String, String?>{
+                    '全部': null,
+                    for (final String location in widget.locations)
+                      location: location
+                  },
                   _location,
                   (String? value) => setState(() => _location = value),
                 ),
               _group(
                 '排序',
-                <String, String?>{'最新在前': 'created_desc', '面积从大到小': 'area_desc', '片数从多到少': 'quantity_desc'},
+                <String, String?>{
+                  '最新在前': 'created_desc',
+                  '面积从大到小': 'area_desc',
+                  '片数从多到少': 'quantity_desc'
+                },
                 _sort,
-                (String? value) => setState(() => _sort = value ?? 'created_desc'),
+                (String? value) =>
+                    setState(() => _sort = value ?? 'created_desc'),
               ),
               const SizedBox(height: AppSpacing.lg),
               PrimaryButton(label: '应用筛选', onPressed: _apply),
@@ -686,7 +751,8 @@ class _InventoryFilterSheetState extends State<InventoryFilterSheet> {
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: () => Navigator.of(context).pop(const InventoryFilter()),
+                  onPressed: () =>
+                      Navigator.of(context).pop(const InventoryFilter()),
                   child: const Text('清除全部筛选'),
                 ),
               ),
@@ -697,13 +763,18 @@ class _InventoryFilterSheetState extends State<InventoryFilterSheet> {
     );
   }
 
-  Widget _group(String title, Map<String, String?> options, String? selected, ValueChanged<String?> onSelected) {
+  Widget _group(String title, Map<String, String?> options, String? selected,
+      ValueChanged<String?> onSelected) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.sub(context))),
+          Text(title,
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.sub(context))),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: AppSpacing.sm,

@@ -202,12 +202,15 @@ def test_multi_piece_deduction_and_remnant_quantity(client, project):
     assert [m["quantity_before"] for m in usage_moves] == [5, 4, 3]
     assert [m["quantity_after"] for m in usage_moves] == [4, 3, 2]
     produced = body["results"][0]["remnant_batch"]
-    assert produced["quantity"] == 3
+    # 3 片切完只剩 1 条连通的余料，不是 3 条。
+    # 旧实现拿「切 1 片的余料」乘片数，形状和数量都是错的。
+    assert produced["quantity"] == 1
+    assert produced["width_mm"] == 500 and produced["height_mm"] == 800
 
     inventory = client.get(f"/api/projects/{project['id']}/inventory", headers=project["headers"]).json()
     quantities = {item["id"]: item["quantity"] for item in inventory["items"]}
     assert quantities[batch["id"]] == 2
-    assert quantities[produced["id"]] == 3
+    assert quantities[produced["id"]] == 1
 
 
 def test_multi_batch_confirmation(client, project):

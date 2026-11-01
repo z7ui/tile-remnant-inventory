@@ -99,7 +99,8 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
         note: '',
       );
       await session.prefs.setCutOption(widget.api.project.id, _cutOption);
-      await session.prefs.setRemnantAction(widget.api.project.id, _remnantAction);
+      await session.prefs
+          .setRemnantAction(widget.api.project.id, _remnantAction);
       if (!mounted) return;
       _submitted = true;
       setState(() => _submitting = false);
@@ -124,18 +125,22 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
       isScrollControlled: true,
       builder: (BuildContext sheetContext) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Row(
                 children: <Widget>[
-                  const Icon(Icons.check_circle, color: AppColors.success, size: 28),
+                  const Icon(Icons.check_circle,
+                      color: AppColors.success, size: 28),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-                      result.replayed ? '已确认（重复提交已拦截）' : '已确认使用 ${widget.quantity} 片',
+                      result.replayed
+                          ? '已确认（重复提交已拦截）'
+                          : '已确认使用 ${widget.quantity} 片',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
@@ -144,11 +149,15 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
               const SizedBox(height: AppSpacing.md),
               _KeyValue(label: '扣减批次', value: _batch.code),
               _KeyValue(label: '切割方式', value: line?.cutOptionLabel ?? '—'),
-              _KeyValue(label: '余料处置', value: line?.remnantActionLabel ?? (line?.remnant == null ? '无余料' : '—')),
+              _KeyValue(
+                  label: '余料处置',
+                  value: line?.remnantActionLabel ??
+                      (line?.remnant == null ? '无余料' : '—')),
               if (produced != null)
                 _KeyValue(
                   label: '余料入库',
-                  value: '${produced.code} · ${formatSize(produced.widthMm, produced.heightMm, widget.unit)} · ${produced.quantity} 片',
+                  value:
+                      '${produced.code} · ${formatSize(produced.widthMm, produced.heightMm, widget.unit)} · ${produced.quantity} 片',
                 ),
               if (discarded) const _KeyValue(label: '余料', value: '已丢弃（流水已记录）'),
               const SizedBox(height: AppSpacing.md),
@@ -158,7 +167,10 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                     Navigator.of(sheetContext).pop();
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
-                        builder: (_) => TracePage(api: widget.api, batchId: produced.id, title: produced.code),
+                        builder: (_) => TracePage(
+                            api: widget.api,
+                            batchId: produced.id,
+                            title: produced.code),
                       ),
                     );
                   },
@@ -209,11 +221,23 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                       children: <Widget>[
                         Row(
                           children: <Widget>[
-                            Text(_batch.code, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.sub(context))),
+                            Text(_batch.code,
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.sub(context))),
                             const SizedBox(width: 6),
-                            if (_batch.isLShape) Tag(label: 'L 形', color: AppColors.remnant) else Tag(label: '矩形', color: AppColors.primary),
+                            if (_batch.isIrregular)
+                              Tag(label: '异形', color: AppColors.warning)
+                            else if (_batch.isLShape)
+                              Tag(label: 'L 形', color: AppColors.remnant)
+                            else
+                              Tag(label: '矩形', color: AppColors.primary),
                             const Spacer(),
-                            Text('剩 ${_batch.quantity} 片', style: TextStyle(fontSize: 12.5, color: AppColors.sub(context))),
+                            Text('剩 ${_batch.quantity} 片',
+                                style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: AppColors.sub(context))),
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -246,7 +270,8 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                         borderRadius: BorderRadius.circular(AppRadius.card),
                         border: Border.all(color: AppColors.line(context)),
                       ),
-                      child: Text('当前切法无法切出该尺寸', style: TextStyle(color: AppColors.sub(context))),
+                      child: Text('当前切法无法切出该尺寸',
+                          style: TextStyle(color: AppColors.sub(context))),
                     ),
                   const SizedBox(height: AppSpacing.lg),
                   if (remnant == null)
@@ -255,47 +280,58 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                       decoration: BoxDecoration(
                         color: AppColors.success.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(AppRadius.control),
-                        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                        border: Border.all(
+                            color: AppColors.success.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: <Widget>[
-                          const Icon(Icons.check_circle_outline, color: AppColors.success, size: 20),
+                          const Icon(Icons.check_circle_outline,
+                              color: AppColors.success, size: 20),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               '整砖使用，无余料，无需选择切割方式与余料处置。',
-                              style: const TextStyle(fontSize: 13.5, color: AppColors.success, height: 1.4),
+                              style: const TextStyle(
+                                  fontSize: 13.5,
+                                  color: AppColors.success,
+                                  height: 1.4),
                             ),
                           ),
                         ],
                       ),
                     )
                   else ...<Widget>[
-                    const SectionTitle(title: '1. 选择切割方式', subtitle: '图示为俯视图，虚线是刀路'),
+                    const SectionTitle(
+                        title: '1. 选择切割方式', subtitle: '图示为俯视图，虚线是刀路'),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Expanded(
                           child: _CutOptionCard(
-                            option: widget.candidate.previewFor('long_side_cut'),
+                            option:
+                                widget.candidate.previewFor('long_side_cut'),
                             batch: _batch,
                             selected: _cutOption == 'long_side_cut',
-                            onTap: () => setState(() => _cutOption = 'long_side_cut'),
+                            onTap: () =>
+                                setState(() => _cutOption = 'long_side_cut'),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: _CutOptionCard(
-                            option: widget.candidate.previewFor('short_side_cut'),
+                            option:
+                                widget.candidate.previewFor('short_side_cut'),
                             batch: _batch,
                             selected: _cutOption == 'short_side_cut',
-                            onTap: () => setState(() => _cutOption = 'short_side_cut'),
+                            onTap: () =>
+                                setState(() => _cutOption = 'short_side_cut'),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    const SectionTitle(title: '2. 余料处置', subtitle: '入库会生成新的余料批次，可继续使用'),
+                    const SectionTitle(
+                        title: '2. 余料处置', subtitle: '入库会生成新的余料批次，可继续使用'),
                     Row(
                       children: <Widget>[
                         Expanded(
@@ -306,7 +342,8 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                             color: AppColors.primary,
                             remnant: remnant,
                             selected: _remnantAction == 'store',
-                            onTap: () => setState(() => _remnantAction = 'store'),
+                            onTap: () =>
+                                setState(() => _remnantAction = 'store'),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
@@ -318,7 +355,8 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                             color: AppColors.danger,
                             remnant: remnant,
                             selected: _remnantAction == 'discard',
-                            onTap: () => setState(() => _remnantAction = 'discard'),
+                            onTap: () =>
+                                setState(() => _remnantAction = 'discard'),
                           ),
                         ),
                       ],
@@ -327,15 +365,28 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                     const SectionTitle(title: '尺寸与面积对比'),
                     Row(
                       children: <Widget>[
-                        _CompareCell(label: '原砖', size: formatSize(_batch.widthMm, _batch.heightMm, unit), area: formatArea(_batch.areaMm2)),
-                        _CompareCell(label: '本次需求', size: formatSize(widget.demandWidthMm, widget.demandLengthMm, unit), area: formatArea(pieceArea)),
-                        _CompareCell(label: '切后余料', size: formatSize(remnant.widthMm, remnant.heightMm, unit), area: formatArea(remnant.areaMm2)),
+                        _CompareCell(
+                            label: '原砖',
+                            size: formatSize(
+                                _batch.widthMm, _batch.heightMm, unit),
+                            area: formatArea(_batch.areaMm2)),
+                        _CompareCell(
+                            label: '本次需求',
+                            size: formatSize(widget.demandWidthMm,
+                                widget.demandLengthMm, unit),
+                            area: formatArea(pieceArea)),
+                        _CompareCell(
+                            label: '切后余料',
+                            size: formatSize(
+                                remnant.widthMm, remnant.heightMm, unit),
+                            area: formatArea(remnant.areaMm2)),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       '利用率 ${preview == null ? '—' : '${((preview.utilization ?? 0) * 100).toStringAsFixed(0)}%'} · 浪费 ${formatArea((preview?.wasteMm2 ?? 0) * widget.quantity)}',
-                      style: TextStyle(fontSize: 12.5, color: AppColors.sub(context)),
+                      style: TextStyle(
+                          fontSize: 12.5, color: AppColors.sub(context)),
                     ),
                     if (remnant.belowThreshold)
                       Padding(
@@ -344,12 +395,18 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
                           padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
                             color: AppColors.warning.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(AppRadius.control),
-                            border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.control),
+                            border: Border.all(
+                                color:
+                                    AppColors.warning.withValues(alpha: 0.3)),
                           ),
                           child: Text(
                             '余料最小边小于项目阈值（${widget.api.project.minUsableMm}mm），入库后可能不好再利用，仍可强制入库。',
-                            style: const TextStyle(fontSize: 12.5, color: AppColors.warning, height: 1.45),
+                            style: const TextStyle(
+                                fontSize: 12.5,
+                                color: AppColors.warning,
+                                height: 1.45),
                           ),
                         ),
                       ),
@@ -363,7 +420,9 @@ class _ConfirmUsagePageState extends State<ConfirmUsagePage> {
               ),
             ),
             BottomActionBar(
-              hint: remnant == null ? '整砖使用，扣减后剩 $remaining 片' : '扣减后 ${_batch.code} 剩 $remaining 片',
+              hint: remnant == null
+                  ? '整砖使用，扣减后剩 $remaining 片'
+                  : '扣减后 ${_batch.code} 剩 $remaining 片',
               child: PrimaryButton(
                 label: _submitting ? '提交中…' : '确认使用',
                 loading: _submitting,
@@ -414,7 +473,8 @@ class _CutOptionCard extends StatelessWidget {
               child: option == null || !feasible
                   ? SizedBox(
                       height: 96,
-                      child: Center(child: Icon(Icons.block, color: AppColors.disabled)),
+                      child: Center(
+                          child: Icon(Icons.block, color: AppColors.disabled)),
                     )
                   : TileShapePreview(
                       widthMm: batch.widthMm,
@@ -432,7 +492,8 @@ class _CutOptionCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 if (selected) ...<Widget>[
-                  Icon(Icons.check_circle, size: 16, color: AppColors.accent(context)),
+                  Icon(Icons.check_circle,
+                      size: 16, color: AppColors.accent(context)),
                   const SizedBox(width: 4),
                 ],
                 Flexible(
@@ -442,7 +503,9 @@ class _CutOptionCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      color: feasible ? AppColors.label(context) : AppColors.disabled,
+                      color: feasible
+                          ? AppColors.label(context)
+                          : AppColors.disabled,
                     ),
                   ),
                 ),
@@ -451,7 +514,8 @@ class _CutOptionCard extends StatelessWidget {
             if (!feasible)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
-                child: Text('放不下', style: TextStyle(fontSize: 11, color: AppColors.disabled)),
+                child: Text('放不下',
+                    style: TextStyle(fontSize: 11, color: AppColors.disabled)),
               ),
           ],
         ),
@@ -489,7 +553,9 @@ class _RemnantOptionCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.card(context),
           borderRadius: BorderRadius.circular(AppRadius.control),
-          border: Border.all(color: selected ? color : AppColors.line(context), width: selected ? 2 : 1),
+          border: Border.all(
+              color: selected ? color : AppColors.line(context),
+              width: selected ? 2 : 1),
         ),
         child: Column(
           children: <Widget>[
@@ -512,7 +578,10 @@ class _RemnantOptionCard extends StatelessWidget {
                   if (label == '丢弃')
                     Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(color: AppColors.card(context).withValues(alpha: 0.85), shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                          color:
+                              AppColors.card(context).withValues(alpha: 0.85),
+                          shape: BoxShape.circle),
                       child: Icon(icon, color: color, size: 22),
                     ),
                 ],
@@ -522,7 +591,8 @@ class _RemnantOptionCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Icon(icon, size: 16, color: selected ? color : AppColors.sub(context)),
+                Icon(icon,
+                    size: 16, color: selected ? color : AppColors.sub(context)),
                 const SizedBox(width: 4),
                 Text(
                   label,
@@ -548,7 +618,8 @@ class _RemnantOptionCard extends StatelessWidget {
 }
 
 class _CompareCell extends StatelessWidget {
-  const _CompareCell({required this.label, required this.size, required this.area});
+  const _CompareCell(
+      {required this.label, required this.size, required this.area});
 
   final String label;
   final String size;
@@ -568,14 +639,18 @@ class _CompareCell extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(label, style: TextStyle(fontSize: 11.5, color: AppColors.sub(context))),
+            Text(label,
+                style:
+                    TextStyle(fontSize: 11.5, color: AppColors.sub(context))),
             const SizedBox(height: 2),
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(size, style: numberStyle(context, size: 14)),
             ),
-            Text(area, style: TextStyle(fontSize: 11.5, color: AppColors.sub(context))),
+            Text(area,
+                style:
+                    TextStyle(fontSize: 11.5, color: AppColors.sub(context))),
           ],
         ),
       ),
@@ -598,10 +673,12 @@ class _KeyValue extends StatelessWidget {
         children: <Widget>[
           SizedBox(
             width: 80,
-            child: Text(label, style: TextStyle(fontSize: 13, color: AppColors.sub(context))),
+            child: Text(label,
+                style: TextStyle(fontSize: 13, color: AppColors.sub(context))),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(fontSize: 13.5, height: 1.4)),
+            child: Text(value,
+                style: const TextStyle(fontSize: 13.5, height: 1.4)),
           ),
         ],
       ),

@@ -175,7 +175,16 @@ def _do_confirm(
                 {"batch_id": batch.id, "cut_option": option},
             )
 
-        remnant = preview["remnant"]
+        # 余料是「切完这 count 片之后」剩下的区域，不是「切 1 片的余料 × count」。
+        # 之前直接用单片 preview 的 remnant 再乘片数，导致切 2 片时把余料记成
+        # 「L 形 × 2 片」，而实际再切一刀后只剩一条 200×800——形状和数量都不对。
+        remaining = list(region)
+        for _ in range(count):
+            step = geometry.plan_cut(remaining, bw, bh, short, long, option)
+            if step is None:
+                break
+            remaining = step.remainder
+        remnant = geometry.remnant_payload(remaining, project.min_usable_mm)
         action = alloc.get("remnant_action")
         if remnant is None:
             action = None
@@ -254,7 +263,7 @@ def _do_confirm(
 
         produced = None
         if remnant is not None and action == "store":
-            produced = _create_remnant_batch(db, project, ctx, batch, remnant, count, option, long, short)
+            produced = _create_remnant_batch(db, project, ctx, batch, remnant, 1, option, long, short)
             sequence += 1
             db.add(
                 InventoryMovement(

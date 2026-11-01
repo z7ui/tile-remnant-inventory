@@ -136,6 +136,7 @@ class Batch {
   final bool belowMinUsable;
 
   bool get isLShape => shapeType == 'l_shape';
+  bool get isIrregular => shapeType == 'irregular';
   bool get isAvailable => status == 'available' && quantity > 0;
   int get shortMm => widthMm <= heightMm ? widthMm : heightMm;
   int get longMm => widthMm <= heightMm ? heightMm : widthMm;
@@ -196,6 +197,7 @@ class Remnant {
   final bool belowThreshold;
 
   bool get isLShape => shapeType == 'l_shape';
+  bool get isIrregular => shapeType == 'irregular';
 
   factory Remnant.fromJson(dynamic json) {
     if (json == null)

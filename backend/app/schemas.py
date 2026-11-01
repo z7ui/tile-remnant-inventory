@@ -12,7 +12,7 @@ from .units import ALLOWED_PROJECT_UNITS
 Unit = Literal["mm", "cm"]
 CutOption = Literal["long_side_cut", "short_side_cut"]
 RemnantAction = Literal["store", "discard"]
-ShapeType = Literal["rectangle", "l_shape"]
+ShapeType = Literal["rectangle", "l_shape", "irregular"]
 
 # 项目名里不允许出现的 Unicode 类别：
 #   Cc 控制字符（\x00、\n、\r、\x1b…）—— 会撑断日志行、把 JSON/CSV 结构搞乱

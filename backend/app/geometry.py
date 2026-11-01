@@ -219,8 +219,11 @@ def describe(region: Sequence[Rect], width: int, height: int) -> dict:
                 "rects": rects,
                 "area_mm2": region_area(region),
             }
+    # 三块及以上拼出来的不是 L 形：比如 710×1500 连切 10 片 230×220，
+    # 剩下的是 5 块矩形拼成的不规则形状。以前这里硬标 l_shape，
+    # 界面上全是"L 形"，和实际对不上。
     return {
-        "type": "l_shape",
+        "type": "irregular" if len(region) >= 3 else "l_shape",
         "composite": True,
         "width_mm": width,
         "height_mm": height,

@@ -350,7 +350,9 @@ class _CandidateCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: AppColors.sub(context))),
               if (batch.isLShape)
-                Tag(label: 'L 形', color: AppColors.remnant)
+                batch.isIrregular
+                    ? Tag(label: '异形', color: AppColors.warning)
+                    : Tag(label: 'L 形', color: AppColors.remnant)
               else
                 Tag(label: '矩形', color: AppColors.primary),
               Tag(
