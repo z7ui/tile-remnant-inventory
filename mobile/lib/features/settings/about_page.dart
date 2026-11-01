@@ -214,26 +214,36 @@ class _AboutPageState extends State<AboutPage> {
                   _Row(label: '更新内容', value: _latest!['notes'].toString()),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                TextButton.icon(
-                  onPressed: _checkingUpdate ? null : _checkUpdate,
-                  icon: _checkingUpdate
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.system_update_alt, size: 18),
-                  label: Text(_checkingUpdate ? '检查中…' : '检查更新'),
-                ),
-                if (_hasUpdate) ...<Widget>[
-                  const SizedBox(width: AppSpacing.sm),
-                  FilledButton.icon(
-                    onPressed: _downloadUpdate,
-                    icon: const Icon(Icons.download, size: 18),
-                    label: const Text('下载安装'),
+            // 下载按钮必须是整行大按钮：之前它挤在「检查更新」旁边，
+            // 窄屏上直接被挤没了，用户看得到「发现新版本」却找不到下载入口。
+            if (_hasUpdate) ...<Widget>[
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _downloadUpdate,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                    textStyle: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
                   ),
-                ],
-              ],
+                  icon: const Icon(Icons.download, size: 20),
+                  label: Text(
+                    '下载并安装 v${_latest!['version'] ?? ''}'
+                    '${_fmtSize(_latest!['size']).isEmpty ? '' : ' · ${_fmtSize(_latest!['size'])}'}',
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xs),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _checkingUpdate ? null : _checkUpdate,
+                icon: _checkingUpdate
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.system_update_alt, size: 18),
+                label: Text(_checkingUpdate ? '检查中…' : '检查更新'),
+              ),
             ),
 
             const SizedBox(height: AppSpacing.md),
