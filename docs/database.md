@@ -33,7 +33,7 @@ devices ─┬─< project_members >─ projects ─┬─< project_invites
 | status | varchar(16) | `active` / `deleted` |
 | created_at / updated_at / deleted_at | datetime | 软删除 |
 
-索引：`ix_projects_status`、`ix_projects_owner`。`name_key` 唯一约束是「项目名全局唯一」的最终屏障（应用层先查再插，冲突时捕获 IntegrityError 返回 409）。
+索引：`ix_projects_status`、`ix_projects_owner`、`ix_projects_short_code`。`name_key` 存成 `归一化名#特征码`，唯一约束由它兜底——但唯一性的**来源**已经变成 `short_code`，名字本身允许重复。
 
 ## project_members
 

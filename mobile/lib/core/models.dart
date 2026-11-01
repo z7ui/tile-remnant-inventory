@@ -17,9 +17,11 @@ double _double(dynamic value, [double fallback = 0]) {
   return double.tryParse('${value ?? ''}') ?? fallback;
 }
 
-String _str(dynamic value, [String fallback = '']) => value == null ? fallback : '$value';
+String _str(dynamic value, [String fallback = '']) =>
+    value == null ? fallback : '$value';
 
-bool _bool(dynamic value, [bool fallback = false]) => value is bool ? value : fallback;
+bool _bool(dynamic value, [bool fallback = false]) =>
+    value is bool ? value : fallback;
 
 List<dynamic> _list(dynamic value) => value is List ? value : const <dynamic>[];
 
@@ -30,7 +32,8 @@ Map<String, dynamic> _map(dynamic value) {
 }
 
 class ShapeRect {
-  const ShapeRect({required this.x, required this.y, required this.w, required this.h});
+  const ShapeRect(
+      {required this.x, required this.y, required this.w, required this.h});
 
   final int x;
   final int y;
@@ -59,7 +62,10 @@ class Notch {
 
   factory Notch.fromJson(dynamic json) {
     final Map<String, dynamic> map = _map(json);
-    return Notch(w: _int(map['w']), h: _int(map['h']), corner: map['corner']?.toString());
+    return Notch(
+        w: _int(map['w']),
+        h: _int(map['h']),
+        corner: map['corner']?.toString());
   }
 
   String get label {
@@ -138,7 +144,8 @@ class Batch {
     final Map<String, dynamic> map = _map(json);
     return Batch(
       id: _str(map['id']),
-      code: _str(map['code'], '#${_int(map['batch_no']).toString().padLeft(4, '0')}'),
+      code: _str(
+          map['code'], '#${_int(map['batch_no']).toString().padLeft(4, '0')}'),
       batchNo: _int(map['batch_no']),
       shapeType: _str(map['shape_type'], 'rectangle'),
       widthMm: _int(map['width_mm']),
@@ -156,7 +163,8 @@ class Batch {
       cutOption: map['cut_option']?.toString(),
       usedLengthMm: _intOrNull(map['used_length_mm']),
       usedWidthMm: _intOrNull(map['used_width_mm']),
-      rects: _list(map['rects']).map(ShapeRect.fromJson).toList(growable: false),
+      rects:
+          _list(map['rects']).map(ShapeRect.fromJson).toList(growable: false),
       notch: map['notch'] == null ? null : Notch.fromJson(map['notch']),
       composite: _bool(map['composite']),
       belowMinUsable: _bool(map['below_min_usable']),
@@ -190,14 +198,21 @@ class Remnant {
   bool get isLShape => shapeType == 'l_shape';
 
   factory Remnant.fromJson(dynamic json) {
-    if (json == null) return const Remnant(shapeType: 'none', widthMm: 0, heightMm: 0, areaMm2: 0, rects: <ShapeRect>[]);
+    if (json == null)
+      return const Remnant(
+          shapeType: 'none',
+          widthMm: 0,
+          heightMm: 0,
+          areaMm2: 0,
+          rects: <ShapeRect>[]);
     final Map<String, dynamic> map = _map(json);
     return Remnant(
       shapeType: _str(map['shape_type'], 'rectangle'),
       widthMm: _int(map['width_mm']),
       heightMm: _int(map['height_mm']),
       areaMm2: _int(map['area_mm2']),
-      rects: _list(map['rects']).map(ShapeRect.fromJson).toList(growable: false),
+      rects:
+          _list(map['rects']).map(ShapeRect.fromJson).toList(growable: false),
       notch: map['notch'] == null ? null : Notch.fromJson(map['notch']),
       notchCorner: map['notch_corner']?.toString(),
       composite: _bool(map['composite']),
@@ -237,9 +252,12 @@ class CutOptionPreview {
       feasible: _bool(map['feasible']),
       reason: map['reason']?.toString(),
       wasteMm2: _intOrNull(map['waste_mm2']),
-      utilization: map['utilization'] == null ? null : _double(map['utilization']),
+      utilization:
+          map['utilization'] == null ? null : _double(map['utilization']),
       rotation: _intOrNull(map['rotation']),
-      placement: map['placement'] == null ? null : ShapeRect.fromJson(map['placement']),
+      placement: map['placement'] == null
+          ? null
+          : ShapeRect.fromJson(map['placement']),
       remnant: map['remnant'] == null ? null : Remnant.fromJson(map['remnant']),
     );
   }
@@ -285,14 +303,19 @@ class MatchCandidate {
     final Map<String, dynamic> match = _map(map['match']);
     return MatchCandidate(
       batch: Batch.fromJson(map['batch']),
-      cutOptions: _list(map['cut_options']).map(CutOptionPreview.fromJson).toList(growable: false),
+      cutOptions: _list(map['cut_options'])
+          .map(CutOptionPreview.fromJson)
+          .toList(growable: false),
       wasteMm2: _int(match['waste_mm2']),
       utilization: _double(match['utilization']),
       rotation: _int(match['rotation']),
       cutOption: _str(match['cut_option'], 'long_side_cut'),
       maxPieces: _int(match['max_pieces'], 1),
-      remnant: match['remnant'] == null ? null : Remnant.fromJson(match['remnant']),
-      placement: match['placement'] == null ? null : ShapeRect.fromJson(match['placement']),
+      remnant:
+          match['remnant'] == null ? null : Remnant.fromJson(match['remnant']),
+      placement: match['placement'] == null
+          ? null
+          : ShapeRect.fromJson(match['placement']),
       remnantValue: _int(match['remnant_value']),
     );
   }
@@ -326,7 +349,11 @@ class AllocationSuggestion {
 }
 
 class DemandInfo {
-  const DemandInfo({required this.shortMm, required this.longMm, required this.quantity, required this.areaMm2});
+  const DemandInfo(
+      {required this.shortMm,
+      required this.longMm,
+      required this.quantity,
+      required this.areaMm2});
 
   final int shortMm;
   final int longMm;
@@ -363,8 +390,12 @@ class MatchResult {
     final Map<String, dynamic> map = _map(json);
     return MatchResult(
       demand: DemandInfo.fromJson(map['demand']),
-      candidates: _list(map['candidates']).map(MatchCandidate.fromJson).toList(growable: false),
-      allocation: _list(map['allocation']).map(AllocationSuggestion.fromJson).toList(growable: false),
+      candidates: _list(map['candidates'])
+          .map(MatchCandidate.fromJson)
+          .toList(growable: false),
+      allocation: _list(map['allocation'])
+          .map(AllocationSuggestion.fromJson)
+          .toList(growable: false),
       unfulfilledQuantity: _int(map['unfulfilled_quantity']),
       totalCandidates: _int(map['total_candidates']),
     );
@@ -487,13 +518,19 @@ class BatchPage {
       hasMore: _bool(map['has_more']),
       pieces: _int(summary['pieces']),
       areaMm2: _int(summary['area_mm2']),
-      locations: _list(filters['locations']).map((dynamic e) => '$e').toList(growable: false),
+      locations: _list(filters['locations'])
+          .map((dynamic e) => '$e')
+          .toList(growable: false),
     );
   }
 }
 
 class MovementPage {
-  const MovementPage({required this.items, required this.total, required this.page, required this.hasMore});
+  const MovementPage(
+      {required this.items,
+      required this.total,
+      required this.page,
+      required this.hasMore});
 
   final List<Movement> items;
   final int total;
@@ -546,7 +583,9 @@ class UsageLine {
       wasteMm2: _int(map['waste_mm2']),
       remnantActionLabel: map['remnant_action_label']?.toString(),
       remnant: map['remnant'] == null ? null : Remnant.fromJson(map['remnant']),
-      remnantBatch: map['remnant_batch'] == null ? null : Batch.fromJson(map['remnant_batch']),
+      remnantBatch: map['remnant_batch'] == null
+          ? null
+          : Batch.fromJson(map['remnant_batch']),
       quantityBefore: _intOrNull(map['quantity_before']),
       quantityAfter: _intOrNull(map['quantity_after']),
     );
@@ -575,14 +614,22 @@ class UsageResult {
       usageId: _str(map['usage_id']),
       replayed: _bool(map['replayed']),
       totalWasteMm2: _int(map['total_waste_mm2']),
-      lines: _list(map['results']).map(UsageLine.fromJson).toList(growable: false),
+      lines:
+          _list(map['results']).map(UsageLine.fromJson).toList(growable: false),
       piecesAfter: _int(after['pieces']),
     );
   }
 }
 
 class TraceNode {
-  const TraceNode({required this.id, required this.code, required this.widthMm, required this.heightMm, required this.areaMm2, required this.quantity, required this.isCurrent});
+  const TraceNode(
+      {required this.id,
+      required this.code,
+      required this.widthMm,
+      required this.heightMm,
+      required this.areaMm2,
+      required this.quantity,
+      required this.isCurrent});
 
   final String id;
   final String code;
@@ -648,10 +695,17 @@ class TraceData {
     return TraceData(
       batch: Batch.fromJson(map['batch']),
       comparison: TraceComparison.fromJson(map['comparison']),
-      ancestors: _list(map['ancestors']).map(TraceNode.fromJson).toList(growable: false),
-      children: _list(map['children']).map(TraceNode.fromJson).toList(growable: false),
-      movements: _list(map['movements']).map(Movement.fromJson).toList(growable: false),
-      nodes: _list(chain['nodes']).map(TraceNode.fromJson).toList(growable: false),
+      ancestors: _list(map['ancestors'])
+          .map(TraceNode.fromJson)
+          .toList(growable: false),
+      children: _list(map['children'])
+          .map(TraceNode.fromJson)
+          .toList(growable: false),
+      movements: _list(map['movements'])
+          .map(Movement.fromJson)
+          .toList(growable: false),
+      nodes:
+          _list(chain['nodes']).map(TraceNode.fromJson).toList(growable: false),
       currentIndex: _int(chain['current_index']),
     );
   }
@@ -687,7 +741,13 @@ class InviteInfo {
 }
 
 class MemberInfo {
-  const MemberInfo({required this.deviceId, required this.name, required this.role, required this.isCurrent, required this.joinedAt, this.lastSeenAt});
+  const MemberInfo(
+      {required this.deviceId,
+      required this.name,
+      required this.role,
+      required this.isCurrent,
+      required this.joinedAt,
+      this.lastSeenAt});
 
   final String deviceId;
   final String name;
@@ -746,6 +806,7 @@ class JoinedProject {
     required this.id,
     required this.name,
     required this.token,
+    this.code = '',
     this.role = 'member',
     this.defaultUnit = 'mm',
     this.minUsableMm = 50,
@@ -755,6 +816,9 @@ class JoinedProject {
   final String id;
   final String name;
   final String token;
+
+  /// 项目特征码（4 位）：项目名允许重复，界面上靠它区分同名项目
+  final String code;
   final String role;
   final String defaultUnit;
   final int minUsableMm;
@@ -762,11 +826,20 @@ class JoinedProject {
 
   bool get isOwner => role == 'owner';
 
-  JoinedProject copyWith({String? name, String? role, String? defaultUnit, int? minUsableMm, ProjectStats? stats}) {
+  /// 展示用：「金域蓝湾 3 栋 1802 · K7M2」
+  String get title => code.isEmpty ? name : '$name · $code';
+
+  JoinedProject copyWith(
+      {String? name,
+      String? role,
+      String? defaultUnit,
+      int? minUsableMm,
+      ProjectStats? stats}) {
     return JoinedProject(
       id: id,
       name: name ?? this.name,
       token: token,
+      code: code,
       role: role ?? this.role,
       defaultUnit: defaultUnit ?? this.defaultUnit,
       minUsableMm: minUsableMm ?? this.minUsableMm,
@@ -780,6 +853,7 @@ class JoinedProject {
       id: _str(map['id']),
       name: _str(map['name'], '未命名项目'),
       token: token,
+      code: _str(map['code']),
       role: _str(map['role'], 'member'),
       defaultUnit: _str(map['default_unit'], 'mm'),
       minUsableMm: _int(map['min_usable_mm'], 50),
@@ -793,6 +867,7 @@ class JoinedProject {
       id: _str(map['id']),
       name: _str(map['name'], '未命名项目'),
       token: _str(map['token']),
+      code: _str(map['code']),
       role: _str(map['role'], 'member'),
       defaultUnit: _str(map['default_unit'], 'mm'),
       minUsableMm: _int(map['min_usable_mm'], 50),
@@ -803,6 +878,7 @@ class JoinedProject {
   Map<String, dynamic> toStorage() => <String, dynamic>{
         'id': id,
         'name': name,
+        'code': code,
         'token': token,
         'role': role,
         'default_unit': defaultUnit,
@@ -819,7 +895,11 @@ class JoinedProject {
 }
 
 class ProjectHome {
-  const ProjectHome({required this.stats, required this.recentMovements, required this.knownLocations, required this.role});
+  const ProjectHome(
+      {required this.stats,
+      required this.recentMovements,
+      required this.knownLocations,
+      required this.role});
 
   final ProjectStats stats;
   final List<Movement> recentMovements;
@@ -830,8 +910,12 @@ class ProjectHome {
     final Map<String, dynamic> map = _map(json);
     return ProjectHome(
       stats: ProjectStats.fromJson(map['stats']),
-      recentMovements: _list(map['recent_movements']).map(Movement.fromJson).toList(growable: false),
-      knownLocations: _list(map['known_locations']).map((dynamic e) => '$e').toList(growable: false),
+      recentMovements: _list(map['recent_movements'])
+          .map(Movement.fromJson)
+          .toList(growable: false),
+      knownLocations: _list(map['known_locations'])
+          .map((dynamic e) => '$e')
+          .toList(growable: false),
       role: _str(_map(map['project'])['role'], 'member'),
     );
   }

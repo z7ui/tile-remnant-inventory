@@ -348,7 +348,7 @@ class _ProjectCard extends StatelessWidget {
             children: <Widget>[
               Expanded(
                 child: Text(
-                  project.name,
+                  project.title,
                   style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

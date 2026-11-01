@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = 240
     rate_limit_burst: int = 60
     rate_limit_write_per_minute: int = 60
+    # 名字预检：单独限得更死，防止枚举项目名
+    rate_limit_name_check_per_minute: int = 12
 
     # --- domain defaults ---------------------------------------------------
     min_usable_mm: int = 50

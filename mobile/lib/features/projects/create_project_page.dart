@@ -24,6 +24,9 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
 
   String _unit = 'mm';
   String? _nameError;
+
+  /// 同名项目已有几个（只是提示，不阻止创建）
+  int _sameNameCount = 0;
   String? _formError;
   bool _checking = false;
   bool _submitting = false;
@@ -68,10 +71,14 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
         withDeviceSecret: true,
       );
       _lastChecked = value;
-      final bool available = (json as Map)['available'] == true;
+      // 项目名允许重复：唯一性由创建时分配的特征码保证。
+      // 这里只提示「已经有几个同名的」，让你知道会多出一个新的，
+      // 而不是拦住你——也正因如此，枚举项目名得不到任何信息。
+      final int same = (json as Map)['same_name_count'] as int? ?? 0;
       if (!mounted) return;
       setState(() {
-        _nameError = available ? null : '项目名称已存在（不区分大小写、忽略首尾空格），请换一个';
+        _nameError = null;
+        _sameNameCount = same;
         _checking = false;
       });
     } on ApiException catch (e) {
@@ -124,7 +131,8 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
     });
     final Session session = SessionScope.of(context);
     try {
-      final JoinedProject project = await session.createProject(name, _unit, minUsable);
+      final JoinedProject project =
+          await session.createProject(name, _unit, minUsable);
       if (!mounted) return;
       await session.refreshProjects();
       if (!mounted) return;
@@ -134,7 +142,8 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
       );
       setState(() => _submitting = false);
       await Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => InvitePage(project: fresh, isNew: true)),
+        MaterialPageRoute<void>(
+            builder: (_) => InvitePage(project: fresh, isNew: true)),
       );
     } catch (error) {
       if (!mounted) return;
@@ -159,7 +168,8 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
               child: ListView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: <Widget>[
-                  const SectionTitle(title: '项目信息', subtitle: '项目名在全局唯一，用于区分不同工地'),
+                  const SectionTitle(
+                      title: '项目信息', subtitle: '同名也可以建；创建后会分配一个 4 位码用来区分'),
                   TextField(
                     controller: _name,
                     focusNode: _nameFocus,
@@ -174,15 +184,45 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
                       suffixIcon: _checking
                           ? const Padding(
                               padding: EdgeInsets.all(14),
-                              child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                              child: SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2)),
                             )
                           : (_nameError == null && _lastChecked != null
-                              ? const Icon(Icons.check_circle_outline, color: AppColors.success)
+                              ? const Icon(Icons.check_circle_outline,
+                                  color: AppColors.success)
                               : null),
                     ),
                   ),
+                  if (_sameNameCount > 0 && _nameError == null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6, left: 2),
+                      child: Row(
+                        children: <Widget>[
+                          Icon(Icons.info_outline,
+                              size: 15, color: AppColors.sub(context)),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              '已有 $_sameNameCount 个同名项目。继续创建会生成新项目，'
+                              '靠 4 位码区分，不会混在一起。',
+                              style: TextStyle(
+                                  fontSize: 12.5,
+                                  height: 1.4,
+                                  color: AppColors.sub(context)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(height: AppSpacing.lg),
-                  Text('默认单位', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.sub(context))),
+                  Text('默认单位',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.sub(context))),
                   const SizedBox(height: AppSpacing.sm),
                   SegmentedButton<String>(
                     segments: const <ButtonSegment<String>>[
@@ -190,12 +230,14 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
                       ButtonSegment<String>(value: 'cm', label: Text('厘米 cm')),
                     ],
                     selected: <String>{_unit},
-                    onSelectionChanged: (Set<String> selection) => setState(() => _unit = selection.first),
+                    onSelectionChanged: (Set<String> selection) =>
+                        setState(() => _unit = selection.first),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     '录入时只填数字，按这里选的单位解析。',
-                    style: TextStyle(fontSize: 12.5, color: AppColors.sub(context)),
+                    style: TextStyle(
+                        fontSize: 12.5, color: AppColors.sub(context)),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   TextField(
@@ -221,14 +263,18 @@ class _CreateProjectPageState extends State<CreateProjectPage> {
                     ),
                     child: Text(
                       '创建后会生成长期有效的邀请码和二维码，工友扫码即可加入。邀请码可随时撤销或重置。',
-                      style: TextStyle(fontSize: 12.5, height: 1.45, color: AppColors.sub(context)),
+                      style: TextStyle(
+                          fontSize: 12.5,
+                          height: 1.45,
+                          color: AppColors.sub(context)),
                     ),
                   ),
                 ],
               ),
             ),
             BottomActionBar(
-              child: PrimaryButton(label: '创建项目', loading: _submitting, onPressed: _submit),
+              child: PrimaryButton(
+                  label: '创建项目', loading: _submitting, onPressed: _submit),
             ),
           ],
         ),

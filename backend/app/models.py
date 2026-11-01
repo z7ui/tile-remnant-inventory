@@ -60,6 +60,10 @@ class Project(Base):
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     name_key: Mapped[str] = mapped_column(String(160), nullable=False, unique=True)
+    # 特征码：4 位大写字母数字（去掉 0/O/1/I/L 这类易混字符）。
+    # 项目名现在允许重复，靠它区分——「金域蓝湾 3 栋 1802 · K7M2」和
+    # 「金域蓝湾 3 栋 1802 · W9TA」是两个不同的项目。
+    short_code: Mapped[str | None] = mapped_column(String(8), nullable=True, index=True)
     default_unit: Mapped[str] = mapped_column(String(4), default="mm", nullable=False)
     min_usable_mm: Mapped[int] = mapped_column(Integer, default=50, nullable=False)
     owner_device_id: Mapped[str] = mapped_column(String(32), ForeignKey("devices.id"), nullable=False)

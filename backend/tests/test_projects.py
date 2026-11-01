@@ -28,31 +28,45 @@ def test_create_project_returns_token_and_invite(client, device):
     assert invite["status"] == "active"
 
 
-def test_duplicate_project_name_rejected_case_and_space_insensitive(client, device):
-    assert _create(client, device, "Demo Project").status_code == 201
+def test_duplicate_project_name_is_allowed_and_code_differs(client, device):
+    """项目名允许重复，靠特征码区分（大小写、空格归一后同名也算重复）。"""
+    first = _create(client, device, "Demo Project")
+    assert first.status_code == 201
+    first_code = first.json()["project"]["code"]
+    assert first_code and len(first_code) == 4
+
+    codes = {first_code}
     for duplicate in ["demo project", "  Demo Project  ", "DEMO   PROJECT"]:
         response = _create(client, device, duplicate)
-        assert response.status_code == 409, duplicate
-        assert response.json()["error"]["code"] == "project_name_taken"
+        assert response.status_code == 201, duplicate
+        code = response.json()["project"]["code"]
+        assert len(code) == 4
+        assert code not in codes, "特征码必须唯一"
+        codes.add(code)
 
 
-def test_duplicate_name_across_devices(client, device):
+def test_duplicate_name_across_devices_is_allowed(client, device):
     assert _create(client, device, "滨江一号").status_code == 201
     other = register_device(client, "另一台手机")
     response = _create(client, other, "滨江一号")
-    assert response.status_code == 409
-    assert response.json()["error"]["code"] == "project_name_taken"
+    # 别人也能用同一个名字，但拿到的是不同项目、不同特征码
+    assert response.status_code == 201
+    assert response.json()["project"]["code"] != ""
 
 
-def test_name_available_endpoint(client, device):
+def test_name_available_always_true(client, device):
+    """名字预检永远返回可创建——枚举项目名因此失去意义。"""
     assert _create(client, device, "保利天悦").status_code == 201
     headers = device_headers(device["device_id"], device["device_secret"])
+
     taken = client.get("/api/projects/name-available", params={"name": " 保利天悦 "}, headers=headers)
     assert taken.status_code == 200
-    assert taken.json()["available"] is False
+    assert taken.json()["available"] is True
+    assert taken.json()["same_name_count"] == 1
 
     free = client.get("/api/projects/name-available", params={"name": "全新项目"}, headers=headers)
     assert free.json()["available"] is True
+    assert free.json()["same_name_count"] == 0
 
 
 def test_join_with_invite_and_persist_across_restarts(client, device, project):

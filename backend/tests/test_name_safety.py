@@ -75,38 +75,39 @@ def test_csv_formula_injection_is_neutralised(raw, expected):
     assert _csv_safe(raw) == expected
 
 
-def test_name_available_does_not_leak_conflict_project(client, project):
-    """名字预检不能回传对方的 id / name / created_at。
+def test_name_available_is_always_true_and_leaks_nothing(client, project):
+    """名字预检：永远可创建（所以枚举无意义），且不回传任何他人信息。
 
-    这个接口注册一个设备就能调（注册本身是公开的，不需要邀请码）。
-    项目名往往就是工地门牌，回传等于告诉陌生人「某工地/某住户正在用」。
+    这个接口注册一个设备就能调。以前它会回传冲突项目的 id/name/created_at，
+    而项目名往往就是工地门牌，等于告诉陌生人「某工地/某住户在用」。
     """
-    # conftest 的 project fixture 固定用这个名称
-    conflict_name = "金域蓝湾 3 栋 1802"
+    headers = device_headers(
+        project["device"]["device_id"], project["device"]["device_secret"]
+    )
     response = client.get(
         "/api/projects/name-available",
-        params={"name": conflict_name},
-        headers=device_headers(
-            project["device"]["device_id"], project["device"]["device_secret"]
-        ),
+        params={"name": "金域蓝湾 3 栋 1802"},
+        headers=headers,
     )
     assert response.status_code == 200, response.text
     body = response.json()
-    assert body["available"] is False
+    assert body["available"] is True
+    assert body["same_name_count"] >= 1
     assert "conflict_project" not in body
+    assert "key" not in body
 
 
-def test_create_duplicate_does_not_leak_other_project(client, project):
-    """创建重名时只说「已占用」，不回传对方项目信息。"""
-    conflict_name = "金域蓝湾 3 栋 1802"
+def test_duplicate_project_is_creatable(client, project):
+    """同名项目允许创建，返回自己的特征码，不泄露别人。"""
+    headers = device_headers(
+        project["device"]["device_id"], project["device"]["device_secret"]
+    )
     response = client.post(
         "/api/projects",
-        json={"name": conflict_name, "default_unit": "mm"},
-        headers=device_headers(
-            project["device"]["device_id"], project["device"]["device_secret"]
-        ),
+        json={"name": "金域蓝湾 3 栋 1802", "default_unit": "mm"},
+        headers=headers,
     )
-    assert response.status_code == 409, response.text
-    details = response.json()["error"].get("details") or {}
-    assert "conflict_project_id" not in details
-    assert "conflict_project_name" not in details
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["project"]["id"] != project["id"]
+    assert len(body["project"]["code"]) == 4

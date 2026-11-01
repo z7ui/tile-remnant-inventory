@@ -106,6 +106,8 @@ def project_payload(project: Project, role: str, stats: dict | None = None) -> d
     return {
         "id": project.id,
         "name": project.name,
+        # 特征码：名字允许重复，界面上靠它区分同名项目
+        "code": project.short_code,
         "default_unit": project.default_unit,
         "min_usable_mm": project.min_usable_mm,
         "role": role,

@@ -117,6 +117,7 @@ def project_summary(ctx: ProjectContext) -> dict:
     return {
         "id": ctx.project.id,
         "name": ctx.project.name,
+        "code": ctx.project.short_code,
         "default_unit": ctx.project.default_unit,
         "min_usable_mm": ctx.project.min_usable_mm,
         "role": "owner" if ctx.is_owner else "member",

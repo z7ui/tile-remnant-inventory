@@ -32,6 +32,14 @@ def new_secret(nbytes: int) -> str:
     return secrets.token_urlsafe(nbytes)
 
 
+PROJECT_CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
+
+
+def new_project_code(length: int = 4) -> str:
+    """项目特征码。4 位是 31^4 ≈ 92 万种，项目数远小于这个量级。"""
+    return "".join(secrets.choice(PROJECT_CODE_ALPHABET) for _ in range(length))
+
+
 def new_invite_code(length: int) -> str:
     return "".join(secrets.choice(INVITE_ALPHABET) for _ in range(length))
 

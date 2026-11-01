@@ -22,7 +22,15 @@ from ..models import (
 )
 from ..schemas import ProjectCreateIn, ProjectJoinIn, ProjectPatchIn
 from ..security import new_project_token, token_fingerprint
-from ..utils import iso, new_id, new_invite_code, normalise_project_name, project_name_key, utcnow
+from ..utils import (
+    iso,
+    new_id,
+    new_invite_code,
+    new_project_code,
+    normalise_project_name,
+    project_name_key,
+    utcnow,
+)
 from . import audit
 from .serializers import project_payload
 
@@ -119,43 +127,56 @@ def _guard_key_length(key: str) -> str:
         )
     return key
 
+def _unique_project_code(db: Session) -> str:
+    """生成全局唯一的项目特征码。4 位不够就依次加长。"""
+    for length in (4, 5, 6):
+        for _ in range(24):
+            code = new_project_code(length)
+            if db.scalar(select(Project).where(Project.short_code == code)) is None:
+                return code
+    raise ApiError(503, "project_code_unavailable", "分配项目特征码失败，请稍后重试。")
+
+
 def check_name_available(db: Session, name: str, exclude_project_id: str | None = None) -> dict:
+    """项目名允许重复，所以这里永远返回「可创建」。
+
+    只告诉调用方「已经有几个同名的」——这是本设备能看到的事实，
+    不涉及他人信息。枚举项目名因此失去意义：永远都是 available。
+    """
     key = _guard_key_length(project_name_key(name))
     if not key:
         raise ApiError(422, "project_name_blank", "项目名称不能为空。")
-    stmt = select(Project).where(Project.name_key == key)
-    existing = db.scalar(stmt)
-    available = existing is None or existing.id == exclude_project_id
+    stmt = (
+        select(func.count())
+        .select_from(Project)
+        .where(Project.name_key.startswith(f"{key}#"), Project.status == "active")
+    )
+    if exclude_project_id:
+        stmt = stmt.where(Project.id != exclude_project_id)
+    same = db.scalar(stmt) or 0
     return {
         "name": normalise_project_name(name),
-        "key": key,
-        "available": available,
-        # 故意不回传冲突项目的信息。
-        # 这个接口只要注册一个设备就能调（注册是公开的，不需要邀请码），
-        # 而项目名往往就是「金域蓝湾 3 栋 1802」这种工地门牌——
-        # 回传 id/name/created_at 等于告诉陌生人「某工地/某住户正在用」。
+        "available": True,
+        "same_name_count": same,
     }
 
 
 def create_project(db: Session, device: Device, payload: ProjectCreateIn, ip: str = "") -> dict:
     name = normalise_project_name(payload.name)
-    key = _guard_key_length(project_name_key(payload.name))
-    if not key:
+    display_key = project_name_key(payload.name)
+    if not display_key:
         raise ApiError(422, "project_name_blank", "项目名称不能为空。")
 
-    existing = db.scalar(select(Project).where(Project.name_key == key))
-    if existing is not None:
-        raise ApiError(
-            409,
-            "project_name_taken",
-            f"项目名称「{name}」已被占用（不区分大小写、忽略首尾空格），请换一个名称。",
-            # 同上：只说「重名了」，不说重的是谁。
-        )
+    # 允许重名：唯一性由特征码保证，name_key 存成「归一化名#码」，
+    # 这样既满足原有的唯一约束，又不需要改表结构。
+    code = _unique_project_code(db)
+    key = _guard_key_length(f"{display_key}#{code}")
 
     project = Project(
         id=new_id(),
         name=name,
         name_key=key,
+        short_code=code,
         default_unit=payload.default_unit,
         min_usable_mm=payload.min_usable_mm,
         owner_device_id=device.id,
@@ -290,10 +311,11 @@ def update_project(db: Session, ctx: ProjectContext, payload: ProjectPatchIn, ip
     project = ctx.project
     if payload.name is not None:
         new_name = normalise_project_name(payload.name)
-        new_key = _guard_key_length(project_name_key(payload.name))
-        conflict = db.scalar(select(Project).where(Project.name_key == new_key, Project.id != project.id))
-        if conflict is not None:
-            raise ApiError(409, "project_name_taken", f"项目名称「{new_name}」已被占用，请换一个名称。")
+        # 改名后仍允许与别人同名：唯一性继续由特征码保证，不查重。
+        # 老数据如果没有码（迁移前的），这里补一个。
+        if not project.short_code:
+            project.short_code = _unique_project_code(db)
+        new_key = _guard_key_length(f"{project_name_key(payload.name)}#{project.short_code}")
         project.name = new_name
         project.name_key = new_key
     if payload.default_unit is not None:

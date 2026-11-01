@@ -49,8 +49,14 @@ class SlidingWindowLimiter:
 
 read_limiter = SlidingWindowLimiter(settings.rate_limit_per_minute)
 write_limiter = SlidingWindowLimiter(settings.rate_limit_write_per_minute)
+# 名字预检单独一档：每分钟 12 次。正常建项目一个人一分钟用不到 12 次，
+# 但枚举项目名需要成千上万次，这个额度让对方基本无从下手。
+name_limiter = SlidingWindowLimiter(settings.rate_limit_name_check_per_minute)
 
 
-def enforce(client_ip: str, scope: str, write: bool = False) -> None:
-    limiter = write_limiter if write else read_limiter
+def enforce(client_ip: str, scope: str, write: bool = False, name_check: bool = False) -> None:
+    if name_check:
+        limiter = name_limiter
+    else:
+        limiter = write_limiter if write else read_limiter
     limiter.check(f"{scope}:{client_ip}")

@@ -25,7 +25,9 @@ def name_available(
     db: Session = Depends(get_db),
     _: Device = Depends(get_device),
 ) -> dict:
-    enforce(client_ip(request), "projects.name")
+    # 单独限流：正常情况下建一个项目只查一两次名字，
+    # 12 次/分钟对真实用户绰绰有余，对枚举项目名则远远不够。
+    enforce(client_ip(request), "projects.name", name_check=True)
     return project_service.check_name_available(db, name, exclude_project_id)
 
 
