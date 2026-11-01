@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/app_theme.dart';
 import '../../core/config.dart';
@@ -23,6 +24,94 @@ class ProjectListPage extends StatefulWidget {
 
 class _ProjectListPageState extends State<ProjectListPage> {
   bool _refreshing = false;
+  bool _launchCheckStarted = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_launchCheckStarted) return;
+    _launchCheckStarted = true;
+    // 放到下一帧：此时 Navigator 已就绪，弹窗不会撞上首帧构建
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkUpdateOnLaunch());
+  }
+
+  /// 启动时静默检查一次更新；有新版才弹窗。
+  /// 任何失败都不打扰用户——断网、服务器维护都算正常情况。
+  Future<void> _checkUpdateOnLaunch() async {
+    if (!mounted) return;
+    final Session session = SessionScope.of(context);
+    if (!session.prefs.autoCheckUpdate) return;
+    try {
+      final dynamic json = await session.api.get('/apk/version.json');
+      if (!mounted) return;
+      final Map<String, dynamic> info = Map<String, dynamic>.from(json as Map);
+      final int remote = (info['versionCode'] as num?)?.toInt() ?? 0;
+      if (remote <= AppConfig.buildNumber) return;
+      // 用户点过「忽略此版本」：同一个构建号不再主动弹
+      if (remote <= session.prefs.ignoredVersionCode) return;
+      await _showUpdateDialog(session, info, remote);
+    } catch (_) {
+      // 静默
+    }
+  }
+
+  Future<void> _showUpdateDialog(
+      Session session, Map<String, dynamic> info, int remote) async {
+    final String version = '${info['version'] ?? ''}';
+    final String size = _formatSize(info['size']);
+    final String notes = (info['notes'] ?? '').toString().trim();
+
+    final String? action = await showDialog<String>(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: Text('发现新版本 v$version'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            if (size.isNotEmpty)
+              Text('安装包 $size',
+                  style: TextStyle(
+                      fontSize: 13, color: AppColors.sub(dialogContext))),
+            if (notes.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 8),
+              Text(notes, style: const TextStyle(fontSize: 13, height: 1.5)),
+            ],
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop('ignore'),
+            child: const Text('忽略此版本'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop('download'),
+            child: const Text('去下载'),
+          ),
+        ],
+      ),
+    );
+
+    if (action == 'ignore') {
+      await session.prefs.setIgnoredVersionCode(remote);
+      if (mounted) showSnack(context, 'v$version 不再提示，之后的新版本会再提醒');
+      return;
+    }
+    if (action == 'download') {
+      final Object? url = info['apk_url'];
+      if (url is! String || url.isEmpty) return;
+      final bool ok = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!ok && mounted) {
+        showSnack(context, '没有可用的浏览器打开下载链接', error: true);
+      }
+    }
+  }
+
+  String _formatSize(Object? bytes) {
+    final int? value = (bytes as num?)?.toInt();
+    if (value == null || value <= 0) return '';
+    return '${(value / 1024 / 1024).toStringAsFixed(1)} MB';
+  }
 
   Future<void> _refresh() async {
     if (_refreshing) return;

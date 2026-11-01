@@ -99,8 +99,8 @@ class _AboutPageState extends State<AboutPage> {
     final bool auto = session.prefs.autoCheckUpdate;
     if (mounted && auto != _autoCheck) setState(() => _autoCheck = auto);
     await _ping();
-    // 开关默认是开的：进这一页就顺手查一次，省得用户每次都要点。
-    if (auto && mounted) await _checkUpdate();
+    // 自动检查放在 App 启动时（ProjectListPage），这里不再重复拉清单，
+    // 否则同一个版本会被弹一次窗、又在关于页查一次。
   }
 
   Future<void> _ping() async {
@@ -288,10 +288,12 @@ class _AboutPageState extends State<AboutPage> {
                 setState(() => _autoCheck = value);
                 await SessionScope.of(context).prefs.setAutoCheckUpdate(value);
               },
-              title: const Text('进入本页时自动检查更新',
+              title: const Text('启动 App 时自动检查更新',
                   style: TextStyle(fontSize: 13.5)),
               subtitle: Text(
-                _autoCheck ? '每次打开「关于」都会查一次' : '已关闭，只在你手动点「检查更新」时查',
+                _autoCheck
+                    ? '有新版会弹窗，可「忽略此版本」或直接去下载'
+                    : '已关闭：只有你点「检查更新」时才查',
                 style: const TextStyle(fontSize: 12),
               ),
             ),

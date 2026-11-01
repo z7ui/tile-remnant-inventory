@@ -48,6 +48,12 @@ class UserPrefs {
 
   Future<void> setAutoCheckUpdate(bool value) => _prefs.setBool('auto_check_update', value);
 
+  /// 用户点了「忽略此版本」时记下的构建号。
+  /// 只有出现**更高**的构建号才会再次弹窗，同一个版本不再骚扰。
+  int get ignoredVersionCode => _prefs.getInt('ignored_version_code') ?? 0;
+
+  Future<void> setIgnoredVersionCode(int code) => _prefs.setInt('ignored_version_code', code);
+
   Future<void> setCutOption(String projectId, String option) => _prefs.setString('cut_$projectId', option);
 
   String remnantActionFor(String projectId) => _prefs.getString('remnant_$projectId') ?? 'store';
