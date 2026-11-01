@@ -17,7 +17,12 @@ class AppColors {
   static const Color surface = Color(0xFFFFFFFF);
   static const Color divider = Color(0xFFE3E6EA);
   static const Color text = Color(0xFF1A1A1A);
-  static const Color textSecondary = Color(0xFF5F6368);
+  /// 说明性文字。原 #5F6368 在白底上只有 5.9:1，12.5px 的小字还是发虚，
+  /// 加深到 #4A4E54（约 8.6:1），工地上逆光看也清楚。
+  static const Color textSecondary = Color(0xFF4A4E54);
+  /// 输入框的占位示例（"例如 阳台 / 储物间"）。必须**明显浅于**真实输入，
+  /// 否则用户分不清"这是示例"还是"我已经输了"——之前它和正文一样深。
+  static const Color textHint = Color(0xFFA3A9B0);
   static const Color disabled = Color(0xFF9E9E9E);
 
   static const Color backgroundDark = Color(0xFF121212);
@@ -108,7 +113,8 @@ ThemeData buildAppTheme(Brightness brightness) {
       fillColor: dark ? AppColors.surfaceDark : Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       labelStyle: TextStyle(color: dark ? AppColors.textSecondaryDark : AppColors.textSecondary, fontSize: 14),
-      hintStyle: TextStyle(color: dark ? AppColors.textSecondaryDark : AppColors.textSecondary, fontSize: 15),
+      // 占位示例单独一档：明显浅于真实输入，一眼能分出"还没填"
+      hintStyle: TextStyle(color: dark ? const Color(0xFF6E767E) : AppColors.textHint, fontSize: 15),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.control),
         borderSide: BorderSide(color: dark ? AppColors.dividerDark : AppColors.divider),

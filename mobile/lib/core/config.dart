@@ -4,11 +4,11 @@ import 'package:flutter/foundation.dart' show kReleaseMode;
 class AppConfig {
   const AppConfig._();
 
-  static const String appVersion = '0.1.9';
+  static const String appVersion = '0.1.10';
 
   /// 构建号，必须和 `pubspec.yaml` 里 `version: x.y.z+N` 的 N 保持一致。
   /// 判断有没有新版本用的是它（字符串比较 "0.1.10" < "0.1.9" 会出错）。
-  static const int buildNumber = 10;
+  static const int buildNumber = 11;
 
   /// 服务器地址在**编译时**定死：
   ///   flutter build apk --dart-define=API_BASE_URL=https://www.z7ui.cn/tile-api

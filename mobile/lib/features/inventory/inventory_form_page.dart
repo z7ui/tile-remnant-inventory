@@ -67,7 +67,9 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
     setState(() {});
   }
 
-  Future<void> _submit() async {
+  /// [stay] = true 时连续入库：入库成功后清空尺寸和片数，**保留存放位置**，
+  /// 用户站在原地接着放下一块砖，不用退出重进。
+  Future<void> _submit({required bool stay}) async {
     final String? lengthError = validateLength(_length.text, _unit);
     final String? widthError = validateLength(_width.text, _unit);
     if (lengthError != null || widthError != null) {
@@ -87,25 +89,47 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
       _formError = null;
     });
     final Session session = SessionScope.of(context);
+    final int submittedPieces = _pieces;
+    final String submittedSize = formatSize(_widthMm ?? 0, _lengthMm ?? 0, _unit);
     try {
       await widget.api.createBatch(
         length: _length.text,
         width: _width.text,
-        quantity: _pieces,
+        quantity: submittedPieces,
         unit: _unit,
         location: _location.text,
         note: _note.text,
       );
       await session.prefs.setUnit(widget.api.project.id, _unit);
-      if (_location.text.trim().isNotEmpty) {
-        await session.prefs.setLastLocation(widget.api.project.id, _location.text.trim());
+      final String place = _location.text.trim();
+      if (place.isNotEmpty) {
+        await session.prefs.setLastLocation(widget.api.project.id, place);
       }
       if (!mounted) return;
-      final String place = _location.text.trim();
+
+      if (stay) {
+        // 尺寸清空，位置留着——同一摞砖通常放在同一个地方
+        setState(() {
+          _submitting = false;
+          _length.clear();
+          _width.clear();
+          _quantity.text = '1';
+          _note.clear();
+          _lengthError = null;
+          _widthError = null;
+          _formError = null;
+        });
+        showSnack(
+          context,
+          '已入库 $submittedPieces 片 · $submittedSize${place.isEmpty ? '' : ' · $place'}',
+        );
+        return;
+      }
+
       await showSavedCard(
         context,
-        title: '已入库 $_pieces 片',
-        subtitle: '${formatSize(_widthMm ?? 0, _lengthMm ?? 0, _unit)}${place.isEmpty ? '' : ' · $place'}',
+        title: '已入库 $submittedPieces 片',
+        subtitle: '$submittedSize${place.isEmpty ? '' : ' · $place'}',
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
@@ -167,7 +191,9 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
                           )
                         : Row(
                             children: <Widget>[
-                              Icon(Icons.crop_square, color: AppColors.sub(context)),
+                              // 原来是 Icons.crop_square——一个空心方框，看着像「可选的选项框」，
+                              // 其实只是装饰，用户点了当然没反应。换成信息图标，明确是提示。
+                              Icon(Icons.info_outline, size: 18, color: AppColors.sub(context)),
                               const SizedBox(width: AppSpacing.sm),
                               Expanded(
                                 child: Text(
@@ -225,7 +251,28 @@ class _InventoryFormPageState extends State<InventoryFormPage> {
             ),
             BottomActionBar(
               hint: hint,
-              child: PrimaryButton(label: '确认入库', loading: _submitting, onPressed: _submit),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: SizedBox(
+                      height: AppSizes.primaryButton,
+                      child: OutlinedButton(
+                        onPressed: _submitting ? null : () => _submit(stay: true),
+                        child: const Text('连续入库'),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    flex: 2,
+                    child: PrimaryButton(
+                      label: '确认入库并返回',
+                      loading: _submitting,
+                      onPressed: () => _submit(stay: false),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
