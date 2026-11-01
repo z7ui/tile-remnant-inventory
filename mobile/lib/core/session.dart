@@ -42,6 +42,12 @@ class UserPrefs {
 
   String cutOptionFor(String projectId) => _prefs.getString('cut_$projectId') ?? 'long_side_cut';
 
+  /// 打开「关于」页时是否自动检查更新（默认开）。
+  /// 关掉之后只能手动点「检查更新」——工地流量紧张时有人会关。
+  bool get autoCheckUpdate => _prefs.getBool('auto_check_update') ?? true;
+
+  Future<void> setAutoCheckUpdate(bool value) => _prefs.setBool('auto_check_update', value);
+
   Future<void> setCutOption(String projectId, String option) => _prefs.setString('cut_$projectId', option);
 
   String remnantActionFor(String projectId) => _prefs.getString('remnant_$projectId') ?? 'store';

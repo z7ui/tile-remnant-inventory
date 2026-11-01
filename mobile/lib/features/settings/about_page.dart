@@ -29,6 +29,8 @@ class _AboutPageState extends State<AboutPage> {
   bool _checkingUpdate = false;
   Map<String, dynamic>? _latest;
   String? _updateError;
+  /// 进入本页时是否自动检查更新（偏好里存的，默认开）
+  bool _autoCheck = true;
 
   /// 服务端清单里的 versionCode 比自己大，才算有新版本。
   bool get _hasUpdate {
@@ -89,7 +91,16 @@ class _AboutPageState extends State<AboutPage> {
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    _ping();
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    final Session session = SessionScope.of(context);
+    final bool auto = session.prefs.autoCheckUpdate;
+    if (mounted && auto != _autoCheck) setState(() => _autoCheck = auto);
+    await _ping();
+    // 开关默认是开的：进这一页就顺手查一次，省得用户每次都要点。
+    if (auto && mounted) await _checkUpdate();
   }
 
   Future<void> _ping() async {
@@ -267,6 +278,21 @@ class _AboutPageState extends State<AboutPage> {
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.system_update_alt, size: 18),
                 label: Text(_checkingUpdate ? '检查中…' : '检查更新'),
+              ),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              value: _autoCheck,
+              onChanged: (bool value) async {
+                setState(() => _autoCheck = value);
+                await SessionScope.of(context).prefs.setAutoCheckUpdate(value);
+              },
+              title: const Text('进入本页时自动检查更新',
+                  style: TextStyle(fontSize: 13.5)),
+              subtitle: Text(
+                _autoCheck ? '每次打开「关于」都会查一次' : '已关闭，只在你手动点「检查更新」时查',
+                style: const TextStyle(fontSize: 12),
               ),
             ),
 
