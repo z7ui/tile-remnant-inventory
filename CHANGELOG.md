@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.28] - 2026-11-02
+
+### Fixed
+
+#### 移动端（Flutter）
+- 图例多片需求改为在**实际可用区域（rects）**里铺网格，避开 L 形缺口。
+  之前在外框上铺，L 形余料会把需求块画到缺口/边界外，出现错位。
+
 ## [0.1.27] - 2026-11-02
 
 ### Fixed

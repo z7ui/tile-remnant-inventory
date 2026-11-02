@@ -250,21 +250,26 @@ class _TileShapePainter extends CustomPainter {
     final ShapeRect? d = demand;
     if (d != null) {
       final int n = demandCount <= 0 ? 1 : demandCount;
-      // 二维网格：沿宽(x)先排满一行，再换下一行(沿高 y)。
-      // 之前「沿一个方向排」只在单列余料上碰巧对；多列（如 1500 宽切 600 需求可放 2 列）
-      // 时全排成一条竖列，和真实二维切割对不上。
-      final int cols = d.w > 0 ? (widthMm ~/ d.w) : 1;
-      final int rows = (n + cols - 1) ~/ cols;
-      for (int i = 0; i < n; i++) {
-        final int c = i % cols;
-        final int r = i ~/ cols;
-        final ShapeRect piece = ShapeRect(
-          x: d.x + c * d.w,
-          y: d.y + r * d.h,
-          w: d.w,
-          h: d.h,
-        );
-        final Rect rect = rectOf(piece);
+      // 在实际可用区域（rects）里按网格铺需求块，避开 L 形缺口。
+      // 之前在外框(bbox)上铺：L 形会在缺口处多画块、还会越过边界，导致错位。
+      final List<ShapeRect> pieces = <ShapeRect>[];
+      for (final ShapeRect r in rects) {
+        if (pieces.length >= n) break;
+        final int cols = d.w > 0 ? (r.w ~/ d.w) : 1;
+        final int rows = d.h > 0 ? (r.h ~/ d.h) : 1;
+        for (int rr = 0; rr < rows && pieces.length < n; rr++) {
+          for (int cc = 0; cc < cols && pieces.length < n; cc++) {
+            pieces.add(ShapeRect(
+              x: r.x + cc * d.w,
+              y: r.y + rr * d.h,
+              w: d.w,
+              h: d.h,
+            ));
+          }
+        }
+      }
+      for (int i = 0; i < pieces.length; i++) {
+        final Rect rect = rectOf(pieces[i]);
         canvas.drawRect(rect, Paint()..color = palette.demand);
         canvas.drawRect(
           rect,
@@ -273,20 +278,10 @@ class _TileShapePainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2,
         );
-        if (showCutLines) {
-          if (n == 1) {
-            // 单片：沿需求块右边、上边画两条切缝（表示「切出这一片」的两刀）
-            _dashedLine(canvas, Offset(rect.right, bbox.top), Offset(rect.right, bbox.bottom));
-            _dashedLine(canvas, Offset(bbox.left, rect.top), Offset(bbox.right, rect.top));
-          } else {
-            // 多片网格：列之间的竖切缝 + 行之间的横切缝
-            if (c < cols - 1) {
-              _dashedLine(canvas, Offset(rect.right, bbox.top), Offset(rect.right, bbox.bottom));
-            }
-            if (r < rows - 1) {
-              _dashedLine(canvas, Offset(bbox.left, rect.top), Offset(bbox.right, rect.top));
-            }
-          }
+        if (showCutLines && n == 1) {
+          // 单片：沿需求块右边、上边画两条切缝（表示「切出这一片」的两刀）
+          _dashedLine(canvas, Offset(rect.right, bbox.top), Offset(rect.right, bbox.bottom));
+          _dashedLine(canvas, Offset(bbox.left, rect.top), Offset(bbox.right, rect.top));
         }
         if (rect.width > 46 && rect.height > 22) {
           _text(canvas, n > 1 ? '${i + 1}' : '需求', rect.center, Colors.white, 11, bold: true);
