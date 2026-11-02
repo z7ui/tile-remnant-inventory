@@ -122,8 +122,9 @@ class _MatchPageState extends State<MatchPage> {
   }
 
   Future<void> _use(MatchCandidate candidate) async {
-    final int take = math.min(
-        _pieces, math.min(candidate.maxPieces, candidate.batch.quantity));
+    // 与卡片上的「使用这块（N 片）」一致：只受需求片数和单块能切几片限制，
+    // 不用 batch.quantity（块数）限制，否则 1 块能切 2 片的余料会被算成 1 片。
+    final int take = math.min(_pieces, candidate.maxPieces);
     final bool? done = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => ConfirmUsagePage(
@@ -321,8 +322,10 @@ class _CandidateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Batch batch = candidate.batch;
-    final int take =
-        math.min(demandQuantity, math.min(candidate.maxPieces, batch.quantity));
+    // 「使用这块」= 从这一块余料切 N 片，N 只受「需求片数」和「单块能切几片(maxPieces)」限制。
+    // batch.quantity 是「这种余料有几块」，不该限制单块能切几片——否则 1 块 300×600
+    // 明明能切 2 片 300×300，会被 min(..., quantity=1) 算成只能切 1 片。
+    final int take = math.min(demandQuantity, candidate.maxPieces);
     final String utilization =
         '${(candidate.utilization * 100).toStringAsFixed(0)}%';
 

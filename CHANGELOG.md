@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.29] - 2026-11-02
+
+### Fixed
+
+#### 移动端（Flutter）
+- 「使用这块（N 片）」的片数之前被 `batch.quantity`（这种余料有几块）限制，
+  导致只有 1 块、但单块能切多片的余料（如 1 块 300×600 能切 2 片 300×300）只算成 1 片。
+  现在只受需求片数和单块可切片数限制。
+
 ## [0.1.28] - 2026-11-02
 
 ### Fixed
