@@ -21,6 +21,11 @@ def register_device(payload: DeviceRegisterIn, request: Request, db: Session = D
     return device_service.register(db, payload, ip=client_ip(request))
 
 
+@router.get("/stats", summary="使用统计（公开，无需鉴权）")
+def stats(db: Session = Depends(get_db)) -> dict:
+    return device_service.stats(db)
+
+
 @router.post("/heartbeat", summary="设备心跳")
 def heartbeat(
     payload: DeviceHeartbeatIn,

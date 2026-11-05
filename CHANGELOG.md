@@ -3,6 +3,18 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.30] - 2026-11-05
+
+### Added
+
+#### 关于页
+- 新增「使用人数」统计：在线设备数、项目数，以及距下一个里程碑还差多少人。
+- 第 10 / 100 / 1000 / 10000 / 100000 位用户：全屏礼炮 + 「恭喜你」弹窗。
+
+#### 后端
+- `GET /api/devices/stats`：公开的设备/项目统计与里程碑列表。
+- 设备注册返回 `device_ordinal`，命中里程碑时附带 `milestone`。
+
 ## [0.1.29] - 2026-11-02
 
 ### Fixed

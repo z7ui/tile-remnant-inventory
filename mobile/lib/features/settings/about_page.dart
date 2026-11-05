@@ -6,6 +6,7 @@ import '../../core/config.dart';
 import '../../core/session.dart';
 import '../../core/session_scope.dart';
 import '../../widgets/common.dart';
+import '../../widgets/confetti.dart';
 
 /// 关于：版本、服务器地址、设备身份、后端连通性。
 ///
@@ -31,6 +32,14 @@ class _AboutPageState extends State<AboutPage> {
   String? _updateError;
   /// 进入本页时是否自动检查更新（偏好里存的，默认开）
   bool _autoCheck = true;
+
+  /// 使用人数统计：有多少台设备装了、多少个项目。
+  int? _devices;
+  int? _projects;
+  bool _statsLoading = false;
+  String? _statsError;
+  /// 进度：距离下一个里程碑还差多少人
+  int? _nextMilestone;
 
   /// 服务端清单里的 versionCode 比自己大，才算有新版本。
   bool get _hasUpdate {
@@ -101,6 +110,7 @@ class _AboutPageState extends State<AboutPage> {
     await _ping();
     // 自动检查放在 App 启动时（ProjectListPage），这里不再重复拉清单，
     // 否则同一个版本会被弹一次窗、又在关于页查一次。
+    await _loadStats();
   }
 
   Future<void> _ping() async {
@@ -129,6 +139,61 @@ class _AboutPageState extends State<AboutPage> {
         _checking = false;
       });
     }
+  }
+
+  /// 拉使用人数统计，并在必要时放礼炮 + 弹恭喜窗。
+  Future<void> _loadStats() async {
+    setState(() {
+      _statsLoading = true;
+      _statsError = null;
+    });
+    try {
+      final Session session = SessionScope.of(context);
+      final dynamic json = await session.api.get('/api/devices/stats');
+      final Map<String, dynamic> map = Map<String, dynamic>.from(json as Map);
+      if (!mounted) return;
+      final int devices = (map['devices'] as num?)?.toInt() ?? 0;
+      final List<int> milestones =
+          (map['milestones'] as List<dynamic>? ?? <dynamic>[])
+              .map((dynamic e) => (e as num).toInt())
+              .toList()
+            ..sort();
+      int? next;
+      for (final int m in milestones) {
+        if (m > devices) {
+          next = m;
+          break;
+        }
+      }
+      setState(() {
+        _devices = devices;
+        _projects = (map['projects'] as num?)?.toInt() ?? 0;
+        _nextMilestone = next;
+        _statsLoading = false;
+      });
+      await _maybeCelebrate();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _statsError = errorMessage(error);
+        _statsLoading = false;
+      });
+    }
+  }
+
+  /// 本机注册时正好踩中里程碑（第 10/100/1000/10000/100000 位用户），且没放过 → 礼炮 + 恭喜窗。
+  Future<void> _maybeCelebrate() async {
+    final Session session = SessionScope.of(context);
+    final int? milestone = session.milestone;
+    if (milestone == null) return;
+    if (session.prefs.milestoneSeen >= milestone) return;
+    await session.prefs.setMilestoneSeen(milestone);
+    if (!mounted) return;
+    ConfettiBurst.show(context);
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _MilestoneDialog(count: milestone),
+    );
   }
 
   @override
@@ -177,6 +242,16 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
+
+            _UsageCard(
+              devices: _devices,
+              projects: _projects,
+              loading: _statsLoading,
+              error: _statsError,
+              nextMilestone: _nextMilestone,
+              onRetry: _loadStats,
+            ),
+            const SizedBox(height: AppSpacing.md),
 
             const SectionTitle(title: '数据服务器', subtitle: '库存和流水都存在这里'),
             _InfoCard(
@@ -339,6 +414,171 @@ class _AboutPageState extends State<AboutPage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 使用人数统计卡片：大数字 + 项目数 + 距下一个里程碑的进度。
+class _UsageCard extends StatelessWidget {
+  const _UsageCard({
+    required this.devices,
+    required this.projects,
+    required this.loading,
+    required this.error,
+    required this.nextMilestone,
+    required this.onRetry,
+  });
+
+  final int? devices;
+  final int? projects;
+  final bool loading;
+  final String? error;
+  final int? nextMilestone;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool ok = error == null && devices != null;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.card(context),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.line(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              const Icon(Icons.people_alt_rounded,
+                  size: 18, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                '使用人数',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.sub(context)),
+              ),
+              const Spacer(),
+              if (!loading && ok)
+                IconButton(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh, size: 18),
+                  tooltip: '刷新',
+                  visualDensity: VisualDensity.compact,
+                ),
+            ],
+          ),
+          if (loading)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text('统计中…',
+                  style: TextStyle(
+                      fontSize: 13, color: AppColors.sub(context))),
+            )
+          else if (!ok)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      '暂时拉不到${error == null ? '' : '（$error）'}',
+                      style: TextStyle(
+                          fontSize: 12.5, color: AppColors.sub(context)),
+                    ),
+                  ),
+                  TextButton(onPressed: onRetry, child: const Text('重试')),
+                ],
+              ),
+            )
+          else ...<Widget>[
+            const SizedBox(height: 2),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Text(
+                  '${devices ?? 0}',
+                  style: const TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w800,
+                    height: 1.05,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text('台设备在用',
+                      style: TextStyle(
+                          fontSize: 13, color: AppColors.sub(context))),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '共 ${projects ?? 0} 个项目'
+              '${nextMilestone == null ? '' : '　·　还差 ${nextMilestone! - (devices ?? 0)} 人到第 $nextMilestone 位'}',
+              style: TextStyle(fontSize: 12, color: AppColors.sub(context)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 里程碑恭喜弹窗：本机是第 N 位用户时，和礼炮一起出现。
+class _MilestoneDialog extends StatelessWidget {
+  const _MilestoneDialog({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      titlePadding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+      title: Row(
+        children: <Widget>[
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.celebration_rounded,
+                size: 22, color: AppColors.primary),
+          ),
+          const SizedBox(width: 10),
+          const Text('恭喜你'),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            '你是第 $count 位使用「余砖管家」的人。',
+            style: const TextStyle(fontSize: 14.5, height: 1.5),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '每一块被记住的余料，都少开一箱新砖。谢谢你一起把它做出来。',
+            style: TextStyle(
+                fontSize: 13, height: 1.6, color: AppColors.sub(context)),
+          ),
+        ],
+      ),
+      actions: <Widget>[
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('继续'),
+        ),
+      ],
     );
   }
 }

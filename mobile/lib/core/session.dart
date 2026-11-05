@@ -54,6 +54,11 @@ class UserPrefs {
   String remnantActionFor(String projectId) => _prefs.getString('remnant_$projectId') ?? 'store';
 
   Future<void> setRemnantAction(String projectId, String action) => _prefs.setString('remnant_$projectId', action);
+
+  /// 已经放过的「第 N 位用户」里程碑，避免同一台机器重复弹窗。
+  int get milestoneSeen => _prefs.getInt('milestone_seen') ?? 0;
+
+  Future<void> setMilestoneSeen(int value) => _prefs.setInt('milestone_seen', value);
 }
 
 class Session extends ChangeNotifier {
@@ -74,6 +79,10 @@ class Session extends ChangeNotifier {
   String serverUrl = AppConfig.defaultBaseUrl;
   String? deviceId;
   String? deviceSecret;
+
+  /// 本机注册时正好踩中的里程碑（第 10 / 100 / 1000 / 10000 / 100000 位用户）。
+  /// 只有新注册的设备才会拿到；老设备升级后为 null，不会补放礼炮。
+  int? milestone;
   List<JoinedProject> projects = <JoinedProject>[];
   JoinedProject? current;
   bool loading = true;
@@ -161,6 +170,7 @@ class Session extends ChangeNotifier {
     final Map<String, dynamic> map = Map<String, dynamic>.from(response as Map);
     deviceId = map['device_id'] as String;
     deviceSecret = map['device_secret'] as String;
+    milestone = (map['milestone'] as num?)?.toInt();
     api.deviceId = deviceId;
     api.deviceSecret = deviceSecret;
     await _store.write(_kDeviceId, deviceId!);
