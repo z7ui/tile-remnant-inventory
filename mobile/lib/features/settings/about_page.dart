@@ -41,6 +41,10 @@ class _AboutPageState extends State<AboutPage> {
   /// 进度：距离下一个里程碑还差多少人
   int? _nextMilestone;
 
+  /// 隐藏彩蛋：3 秒内连点版本号 5 次，预览礼炮效果。
+  int _versionTaps = 0;
+  DateTime? _lastVersionTapAt;
+
   /// 服务端清单里的 versionCode 比自己大，才算有新版本。
   bool get _hasUpdate {
     final Map<String, dynamic>? info = _latest;
@@ -196,6 +200,30 @@ class _AboutPageState extends State<AboutPage> {
     );
   }
 
+  /// 隐藏彩蛋：3 秒内连点版本号 5 次，预览里程碑的礼炮 + 弹窗。
+  /// 弹窗里会标注「预览」，不会假装用户真的是第 N 位。
+  void _onVersionTap() {
+    final DateTime now = DateTime.now();
+    if (_lastVersionTapAt == null ||
+        now.difference(_lastVersionTapAt!) > const Duration(seconds: 3)) {
+      _versionTaps = 0;
+    }
+    _lastVersionTapAt = now;
+    _versionTaps++;
+    if (_versionTaps < 5) return;
+    _versionTaps = 0;
+    _previewMilestone();
+  }
+
+  void _previewMilestone() {
+    final int target = _nextMilestone ?? ((_devices ?? 0) + 1);
+    ConfettiBurst.show(context);
+    showDialog<void>(
+      context: context,
+      builder: (_) => _MilestoneDialog(count: target, preview: true),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final Session session = SessionScope.of(context);
@@ -233,10 +261,18 @@ class _AboutPageState extends State<AboutPage> {
                         TextStyle(fontSize: 13, color: AppColors.sub(context)),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'v${AppConfig.appVersion}',
-                    style: TextStyle(
-                        fontSize: 12.5, color: AppColors.sub(context)),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _onVersionTap,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 6),
+                      child: Text(
+                        'v${AppConfig.appVersion}',
+                        style: TextStyle(
+                            fontSize: 12.5, color: AppColors.sub(context)),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -531,10 +567,12 @@ class _UsageCard extends StatelessWidget {
 }
 
 /// 里程碑恭喜弹窗：本机是第 N 位用户时，和礼炮一起出现。
+/// [preview] 为真时是连点版本号触发的彩蛋预览，会明确标注「预览」。
 class _MilestoneDialog extends StatelessWidget {
-  const _MilestoneDialog({required this.count});
+  const _MilestoneDialog({required this.count, this.preview = false});
 
   final int count;
+  final bool preview;
 
   @override
   Widget build(BuildContext context) {
@@ -571,6 +609,21 @@ class _MilestoneDialog extends StatelessWidget {
             style: TextStyle(
                 fontSize: 13, height: 1.6, color: AppColors.sub(context)),
           ),
+          if (preview) ...<Widget>[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '预览：真正的第 $count 位用户注册时，会看到这个画面。',
+                style: const TextStyle(
+                    fontSize: 11.5, height: 1.5, color: AppColors.primary),
+              ),
+            ),
+          ],
         ],
       ),
       actions: <Widget>[

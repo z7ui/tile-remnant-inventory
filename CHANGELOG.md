@@ -3,6 +3,13 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.31] - 2026-11-05
+
+### Added
+
+#### 关于页
+- 隐藏彩蛋：3 秒内连点版本号 5 次，预览里程碑的礼炮 + 恭喜弹窗（标注「预览」，不冒充真实里程碑）。
+
 ## [0.1.30] - 2026-11-05
 
 ### Added
