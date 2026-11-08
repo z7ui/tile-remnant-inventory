@@ -7,6 +7,7 @@ import '../../core/formatters.dart';
 import '../../core/models.dart';
 import '../../core/session.dart';
 import '../../core/session_scope.dart';
+import '../../widgets/announcement_dialog.dart';
 import '../../widgets/common.dart';
 import '../home/project_shell_page.dart';
 import '../projects/create_project_page.dart';
@@ -32,7 +33,57 @@ class _ProjectListPageState extends State<ProjectListPage> {
     if (_launchCheckStarted) return;
     _launchCheckStarted = true;
     // 放到下一帧：此时 Navigator 已就绪，弹窗不会撞上首帧构建
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkUpdateOnLaunch());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAnnouncementOnLaunch();
+      _checkUpdateOnLaunch();
+    });
+  }
+
+  /// 拉服务端公告并显示。失败静默——公告不是关键路径。
+  Future<void> _checkAnnouncementOnLaunch() async {
+    if (!mounted) return;
+    try {
+      final Session session = SessionScope.of(context);
+      final dynamic json = await session.api.get(
+        '/api/announcement',
+        query: <String, String>{'app_version': AppConfig.appVersion},
+      );
+      if (!mounted) return;
+      final dynamic raw = (json as Map)['announcement'];
+      if (raw == null) return;
+
+      final Announcement announcement = Announcement.fromJson(raw);
+      if (announcement.title.isEmpty && announcement.body.isEmpty) return;
+
+      final String? action = await showAnnouncementDialog(context, announcement);
+      if (!mounted || action == null) return;
+
+      String target = '';
+      for (final AnnouncementButton button in announcement.buttons) {
+        if (button.action == action) {
+          target = button.target;
+          break;
+        }
+      }
+      await runAnnouncementAction(
+        context,
+        action,
+        target,
+        onReload: () async {
+          if (!mounted) return;
+          await SessionScope.of(context).refreshProjects();
+          if (mounted) setState(() {});
+        },
+        onAbout: () {
+          if (!mounted) return;
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const AboutPage()),
+          );
+        },
+      );
+    } catch (_) {
+      // 静默
+    }
   }
 
   /// 启动时静默检查一次更新；有新版才弹窗。

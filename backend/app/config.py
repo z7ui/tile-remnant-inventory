@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     # 名字预检：单独限得更死，防止枚举项目名
     rate_limit_name_check_per_minute: int = 12
 
+    # --- 公告（服务端下发文案/按钮，改 JSON 文件即可生效，不用重启） ---------
+    announcement_path: str = "/opt/tile/announcements.json"
+
     # --- domain defaults ---------------------------------------------------
     min_usable_mm: int = 50
     max_dimension_mm: int = 100000

@@ -3,6 +3,20 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.36] - 2026-11-08
+
+### Added
+
+#### 服务端公告（后门通道）
+- App 启动时拉 `/api/announcement`，服务端可下发标题、正文和最多 4 个按钮。
+- 动作白名单：`open_url`（打开链接）、`dismiss`（关闭）、`reload`（刷新配置）、`open_about`（打开关于页）、`copy`（复制文本）、`none`（空槽位，不显示）。
+- 支持按 `min_version` / `max_version` / `starts_at` / `ends_at` 筛选；`dismissible` 控制能否点外部关闭。
+- 配置在服务器 `/opt/tile/announcements.json`，每次启动读文件，改完立即生效、不用重启。
+
+#### 后端
+- `GET /api/announcement`：公开接口，按 `X-App-Version` 或 `?app_version=` 筛选。
+- 新增 7 个测试（版本区间、数字比较、动作白名单、禁用、时间窗、坏文件不崩）。
+
 ## [0.1.35] - 2026-11-08
 
 ### Fixed

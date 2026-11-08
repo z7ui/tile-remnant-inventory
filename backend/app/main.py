@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.responses import JSONResponse
@@ -16,6 +16,7 @@ from .db import Base, engine
 from .errors import install_error_handlers
 from .middleware import RateLimitMiddleware, RequestContextMiddleware
 from .routers import devices, inventory, matching, projects
+from .services import announcement as announcement_service
 from .utils import iso, utcnow
 
 logging.basicConfig(
@@ -96,6 +97,11 @@ def create_app() -> FastAPI:
             ],
             "notice": "无账号体系：换机或清除应用数据后需重新扫码/输入邀请码加入项目。",
         }
+
+    @app.get(f"{settings.api_prefix}/announcement", tags=["system"], summary="服务端公告（按版本/时间下发）")
+    def announcement(request: Request, app_version: str = "") -> dict:
+        version = app_version or request.headers.get("x-app-version", "")
+        return {"announcement": announcement_service.pick(version)}
 
     @app.get("/", include_in_schema=False)
     def root() -> JSONResponse:

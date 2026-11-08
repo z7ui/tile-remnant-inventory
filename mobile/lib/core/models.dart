@@ -534,6 +534,61 @@ class MultiMatchSummary {
   }
 }
 
+/// 服务端公告里的一个按钮。
+class AnnouncementButton {
+  const AnnouncementButton({
+    required this.label,
+    required this.action,
+    required this.target,
+  });
+
+  final String label;
+
+  /// 白名单：open_url / dismiss / reload / open_about / copy / none
+  final String action;
+  final String target;
+
+  bool get isVisible => label.trim().isNotEmpty && action != 'none';
+
+  factory AnnouncementButton.fromJson(dynamic json) {
+    final Map<String, dynamic> map = _map(json);
+    return AnnouncementButton(
+      label: '${map['label'] ?? ''}',
+      action: '${map['action'] ?? 'none'}',
+      target: '${map['target'] ?? ''}',
+    );
+  }
+}
+
+/// 服务端下发的一条公告。
+class Announcement {
+  const Announcement({
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.dismissible,
+    required this.buttons,
+  });
+
+  final String id;
+  final String title;
+  final String body;
+  final bool dismissible;
+  final List<AnnouncementButton> buttons;
+
+  factory Announcement.fromJson(dynamic json) {
+    final Map<String, dynamic> map = _map(json);
+    return Announcement(
+      id: '${map['id'] ?? ''}',
+      title: '${map['title'] ?? ''}',
+      body: '${map['body'] ?? ''}',
+      dismissible: map['dismissible'] != false,
+      buttons: _list(map['buttons'])
+          .map(AnnouncementButton.fromJson)
+          .toList(growable: false),
+    );
+  }
+}
 /// 多尺寸匹配结果。
 class MultiMatchResult {
   const MultiMatchResult({
