@@ -174,7 +174,7 @@ class StockCard extends StatelessWidget {
                       _ActionChip(
                         icon: Icons.tune,
                         label: '调整',
-                        color: AppColors.sub(context),
+                        color: AppColors.warning,
                         onTap: onAdjust,
                       ),
                     if (onConsume != null) ...<Widget>[
@@ -190,7 +190,7 @@ class StockCard extends StatelessWidget {
                     _ActionChip(
                       icon: Icons.account_tree_outlined,
                       label: '溯源',
-                      color: AppColors.sub(context),
+                      color: AppColors.success,
                       onTap: onTrace,
                     ),
                   ],

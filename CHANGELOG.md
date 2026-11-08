@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.37] - 2026-11-08
+
+### Fixed
+
+#### 库存卡片
+- 「调整 / 用掉 / 溯源」改用三种语义色区分：调整=橙、用掉=蓝、溯源=绿。
+  之前用 `AppColors.sub`（蓝灰），三个看起来一个颜色。
+
 ## [0.1.36] - 2026-11-08
 
 ### Added
