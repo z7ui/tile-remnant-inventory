@@ -12,7 +12,7 @@ from .. import geometry
 from ..deps import ProjectContext
 from ..errors import ApiError
 from ..models import InventoryBatch, InventoryMovement, Project
-from ..schemas import InventoryCreateIn, InventoryPatchIn
+from ..schemas import BatchConsumeIn, InventoryCreateIn, InventoryPatchIn
 from ..units import DimensionError, parse_length_mm
 from ..utils import iso, new_id, utcnow
 from . import audit
@@ -293,6 +293,74 @@ def update_batch(db: Session, ctx: ProjectContext, batch_id: str, payload: Inven
         )
         db.commit()
     return {"batch": batch_payload(batch, project.min_usable_mm)}
+
+
+def consume_whole(
+    db: Session,
+    ctx: ProjectContext,
+    batch_id: str,
+    payload: BatchConsumeIn,
+    ip: str = "",
+) -> dict:
+    """整砖批量使用：不切割，直接扣 N 片，写一条 usage 流水。
+
+    对应工地场景：「来了 100 片 715，贴地板用了 50 片完整的」——
+    没必要一片一片点确认，直接扣 50 片。
+    """
+    batch = get_batch(db, ctx.project, batch_id)
+    if batch.status != "available" or batch.quantity <= 0:
+        raise ApiError(409, "batch_unavailable", f"批次 #{batch.batch_no:04d} 已不可用。")
+    if payload.quantity > batch.quantity:
+        raise ApiError(
+            409,
+            "insufficient_quantity",
+            f"批次 #{batch.batch_no:04d} 只剩 {batch.quantity} 片，不能扣 {payload.quantity} 片。",
+        )
+
+    before = batch.quantity
+    after = before - payload.quantity
+    db.add(
+        InventoryMovement(
+            id=new_id(),
+            project_id=ctx.project.id,
+            batch_id=batch.id,
+            batch_no=batch.batch_no,
+            root_batch_id=batch.root_batch_id,
+            type="usage",
+            quantity_delta=-payload.quantity,
+            quantity_before=before,
+            quantity_after=after,
+            width_before_mm=batch.width_mm,
+            height_before_mm=batch.height_mm,
+            width_after_mm=batch.width_mm,
+            height_after_mm=batch.height_mm,
+            area_before_mm2=batch.area_mm2,
+            area_after_mm2=batch.area_mm2,
+            device_id=ctx.device.id,
+            note=payload.note or "整砖批量使用",
+        )
+    )
+    batch.quantity = after
+    batch.version += 1
+    batch.updated_at = utcnow()
+    if batch.quantity == 0:
+        batch.status = "depleted"
+
+    audit.log(
+        db,
+        "inventory.consume",
+        project_id=ctx.project.id,
+        device_id=ctx.device.id,
+        target_type="batch",
+        target_id=batch.id,
+        detail={"quantity": -payload.quantity, "after": after},
+        ip=ip,
+    )
+    db.commit()
+    return {
+        "batch": batch_payload(batch, ctx.project.min_usable_mm),
+        "used_quantity": payload.quantity,
+    }
 
 
 def parse_date(value: str | None) -> datetime | None:

@@ -268,8 +268,105 @@ class _InventoryPageState extends State<InventoryPage> {
     );
   }
 
-  Future<void> _openFilters() async {
-    final InventoryFilter? result = await showModalBottomSheet<InventoryFilter>(
+  /// 弹一个数字输入框，返回用户输入的整数（取消返回 null）。
+  Future<int?> _askCount({
+    required String title,
+    required String hint,
+    required int initial,
+    required int max,
+    required String actionLabel,
+  }) async {
+    final TextEditingController controller =
+        TextEditingController(text: '$initial');
+    final int? result = await showDialog<int>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        String? error;
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setDialogState) {
+            return AlertDialog(
+              title: Text(title),
+              content: TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: hint,
+                  suffixText: '片',
+                  errorText: error,
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('取消'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final int? value = int.tryParse(controller.text);
+                    if (value == null || value < 0 || value > max) {
+                      setDialogState(() => error = '请输入 0 ~ $max 之间的整数');
+                      return;
+                    }
+                    Navigator.of(dialogContext).pop(value);
+                  },
+                  child: Text(actionLabel),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    controller.dispose();
+    return result;
+  }
+
+  Future<void> _consume(Batch batch) async {
+    final int? count = await _askCount(
+      title: '用掉整砖',
+      hint: '这次用掉几片（当前 ${batch.quantity} 片）',
+      initial: batch.quantity,
+      max: batch.quantity,
+      actionLabel: '扣掉',
+    );
+    if (count == null || count < 1) return;
+    try {
+      await widget.api
+          .consumeBatch(batch.id, quantity: count, note: '整砖批量使用');
+      if (!mounted) return;
+      showSnack(context, '已用掉 $count 片');
+      await _load(reset: true);
+    } catch (error) {
+      if (!mounted) return;
+      showSnack(context, errorMessage(error), error: true);
+    }
+  }
+
+  Future<void> _adjust(Batch batch) async {
+    final int? count = await _askCount(
+      title: '调整片数',
+      hint: '盘点后的实际片数',
+      initial: batch.quantity,
+      max: 20000,
+      actionLabel: '保存',
+    );
+    if (count == null || count == batch.quantity) return;
+    try {
+      await widget.api.updateBatch(batch.id, <String, dynamic>{
+        'quantity': count,
+        'adjust_reason': '手动调整为 $count 片',
+      });
+      if (!mounted) return;
+      showSnack(context, '片数已改为 $count');
+      await _load(reset: true);
+    } catch (error) {
+      if (!mounted) return;
+      showSnack(context, errorMessage(error), error: true);
+    }
+  }
+
+  Future<void> _openFilters() async {    final InventoryFilter? result = await showModalBottomSheet<InventoryFilter>(
       context: context,
       isScrollControlled: true,
       builder: (_) => InventoryFilterSheet(
@@ -470,6 +567,8 @@ class _InventoryPageState extends State<InventoryPage> {
                   unit: unit,
                   onTap: () => _openTrace(batch),
                   onTrace: () => _openTrace(batch),
+                  onConsume: () => _consume(batch),
+                  onAdjust: () => _adjust(batch),
                 ),
               ),
               if (_loadingMore)

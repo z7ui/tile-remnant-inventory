@@ -95,6 +95,13 @@ class InventoryCreateIn(StrictModel):
     note: str = Field(default="", max_length=500)
 
 
+class BatchConsumeIn(StrictModel):
+    """整砖批量使用（不切割）：一次扣掉 N 片。"""
+
+    quantity: int = Field(ge=1, le=20000)
+    note: str = Field(default="", max_length=200)
+
+
 class InventoryPatchIn(StrictModel):
     location: str | None = Field(default=None, max_length=120)
     note: str | None = Field(default=None, max_length=500)

@@ -3,6 +3,22 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.33] - 2026-11-08
+
+### Added
+
+#### 库存
+- 库存卡片新增「**用掉**」：整砖批量使用，一次扣 N 片（对应「100 片 715 贴地板用了 50 片」），写一条 usage 流水。
+- 库存卡片新增「**调整**」：手动把片数改成盘点后的实际值，写一条 adjust 流水（后端本来支持，补上前端入口）。
+
+#### 多尺寸匹配
+- 结果里每块砖新增**混排图示**：外框是原砖，色块是每一片，不同尺寸不同颜色。
+- AppBar 上的多尺寸入口改成带边框和文字的按钮（原来只有个图标，不知道干啥的）。
+
+#### 后端
+- `POST /api/projects/{id}/inventory/{batch_id}/consume`：整砖批量使用（不切割，直接扣片数）。
+- 新增 4 个测试（扣减、超扣拒绝、用完置 depleted、手动调整流水）。
+
 ## [0.1.32] - 2026-11-08
 
 ### Added

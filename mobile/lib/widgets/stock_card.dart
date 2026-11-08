@@ -13,6 +13,8 @@ class StockCard extends StatelessWidget {
     required this.unit,
     this.onTap,
     this.onTrace,
+    this.onConsume,
+    this.onAdjust,
     this.highlight = false,
   });
 
@@ -20,6 +22,12 @@ class StockCard extends StatelessWidget {
   final String unit;
   final VoidCallback? onTap;
   final VoidCallback? onTrace;
+
+  /// 整砖批量使用（一次扣 N 片）
+  final VoidCallback? onConsume;
+
+  /// 手动调整片数（盘点纠错）
+  final VoidCallback? onAdjust;
   final bool highlight;
 
   @override
@@ -162,13 +170,32 @@ class StockCard extends StatelessWidget {
                             icon: Icons.warning_amber_rounded),
                       ),
                     const Spacer(),
+                    if (onAdjust != null)
+                      TextButton(
+                        onPressed: onAdjust,
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(0, AppSizes.minTouch),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                        ),
+                        child: const Text('调整'),
+                      ),
+                    if (onConsume != null)
+                      TextButton.icon(
+                        onPressed: onConsume,
+                        icon: const Icon(Icons.remove_circle_outline, size: 17),
+                        label: const Text('用掉'),
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(0, AppSizes.minTouch),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                        ),
+                      ),
                     TextButton.icon(
                       onPressed: onTrace,
-                      icon: const Icon(Icons.account_tree_outlined, size: 18),
+                      icon: const Icon(Icons.account_tree_outlined, size: 17),
                       label: const Text('溯源'),
                       style: TextButton.styleFrom(
-                        minimumSize: const Size(88, AppSizes.minTouch),
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: const Size(0, AppSizes.minTouch),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
                       ),
                     ),
                   ],

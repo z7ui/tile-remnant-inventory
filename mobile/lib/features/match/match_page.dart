@@ -180,10 +180,23 @@ class _MatchPageState extends State<MatchPage> {
         context,
         '快速匹配',
         actions: <Widget>[
-          IconButton(
-            onPressed: _openMulti,
-            icon: const Icon(Icons.grid_view_rounded),
-            tooltip: '多尺寸一起匹配',
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            child: TextButton.icon(
+              onPressed: _openMulti,
+              icon: const Icon(Icons.grid_view_rounded, size: 16),
+              label: const Text('多尺寸',
+                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500)),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(0, 32),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                foregroundColor: AppColors.primary,
+                side: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.35)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
           ),
         ],
       ),

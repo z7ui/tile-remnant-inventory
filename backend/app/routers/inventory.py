@@ -11,7 +11,7 @@ from ..config import settings
 from ..db import get_db
 from ..deps import ProjectContext, client_ip, get_project_context
 from ..ratelimit import enforce
-from ..schemas import InventoryCreateIn, InventoryPatchIn
+from ..schemas import BatchConsumeIn, InventoryCreateIn, InventoryPatchIn
 from ..services import inventory as inventory_service
 from ..services.serializers import batch_payload
 
@@ -85,6 +85,18 @@ def get_inventory(
 ) -> dict:
     batch = inventory_service.get_batch(db, ctx.project, batch_id)
     return {"batch": batch_payload(batch, ctx.project.min_usable_mm)}
+
+
+@router.post("/{batch_id}/consume", summary="整砖批量使用（不切割，直接扣 N 片）")
+def consume_inventory(
+    batch_id: str,
+    payload: BatchConsumeIn,
+    request: Request,
+    ctx: ProjectContext = Depends(get_project_context),
+    db: Session = Depends(get_db),
+) -> dict:
+    enforce(client_ip(request), "inventory.consume", write=True)
+    return inventory_service.consume_whole(db, ctx, batch_id, payload, ip=client_ip(request))
 
 
 @router.patch("/{batch_id}", summary="修改存放位置/备注/片数/状态")

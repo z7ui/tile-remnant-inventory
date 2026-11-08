@@ -7,7 +7,7 @@ import '../../core/project_api.dart';
 import '../../core/session.dart';
 import '../../core/session_scope.dart';
 import '../../widgets/common.dart';
-import '../../widgets/dimension_input.dart';
+import '../../widgets/nesting_preview.dart';
 
 /// 多尺寸一起匹配：大件优先，一块砖内递归切割（一刀切到底）。
 class MatchMultiPage extends StatefulWidget {
@@ -327,6 +327,19 @@ class _MatchMultiPageState extends State<MatchMultiPage> {
                       fontSize: 12.5, color: AppColors.sub(context))),
             ],
           ),
+          const SizedBox(height: 8),
+          if (block.cuttings.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: SizedBox(
+                height: 150,
+                child: NestingPreview(
+                  widthMm: block.widthMm,
+                  heightMm: block.heightMm,
+                  cuttings: block.cuttings,
+                ),
+              ),
+            ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,

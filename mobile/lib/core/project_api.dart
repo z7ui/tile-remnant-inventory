@@ -97,6 +97,20 @@ class ProjectApi {
     return Batch.fromJson((json as Map)['batch']);
   }
 
+  /// 整砖批量使用（不切割）：一次扣 N 片。
+  Future<Batch> consumeBatch(
+    String batchId, {
+    required int quantity,
+    String note = '',
+  }) async {
+    final dynamic json = await _api.post(
+      '$_base/inventory/$batchId/consume',
+      body: <String, dynamic>{'quantity': quantity, 'note': note},
+      projectToken: project.token,
+    );
+    return Batch.fromJson((json as Map)['batch']);
+  }
+
   Future<MatchResult> match({
     required String length,
     required String width,

@@ -465,6 +465,7 @@ class NestingBlock {
     required this.widthMm,
     required this.heightMm,
     required this.pieces,
+    required this.cuttings,
     required this.usedAreaMm2,
     required this.wasteAreaMm2,
     required this.totalPieces,
@@ -475,6 +476,9 @@ class NestingBlock {
   final int widthMm;
   final int heightMm;
   final List<NestingPiece> pieces;
+
+  /// 每一片的实际位置（画混排图用）。
+  final List<ShapeRect> cuttings;
   final int usedAreaMm2;
   final int wasteAreaMm2;
   final int totalPieces;
@@ -492,6 +496,9 @@ class NestingBlock {
       heightMm: _int(map['height_mm']),
       pieces: _list(plan['placed'])
           .map(NestingPiece.fromJson)
+          .toList(growable: false),
+      cuttings: _list(plan['pieces_rects'])
+          .map(ShapeRect.fromJson)
           .toList(growable: false),
       usedAreaMm2: _int(plan['used_area_mm2']),
       wasteAreaMm2: _int(plan['waste_area_mm2']),
