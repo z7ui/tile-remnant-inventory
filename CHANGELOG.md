@@ -3,6 +3,22 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.32] - 2026-11-08
+
+### Added
+
+#### 多尺寸匹配（预览）
+- 快速匹配页右上角新增「多尺寸一起匹配」入口。
+- 最多 20 行尺寸 + 各自数量；服务端**大件优先**，一块砖内递归切割（一刀切到底），
+  切完的边角当场继续切小件。
+- 结果按「每块砖」展示：这块砖切了哪些尺寸各几片、利用率、浪费面积，以及满足/缺口统计。
+- 当前为**预览**：只算不扣库存，确认使用（一次扣多块 + 余料入库）下一步开放。
+
+#### 后端
+- `POST /api/projects/{id}/match-multi`：多需求混排匹配。
+- `services/nesting.py`：guillotine 递归切割（支持旋转 90°、best-fit 选空矩形）。
+- L 形余料暂不参与混排，会在 `skipped` 里说明原因。
+
 ## [0.1.31] - 2026-11-05
 
 ### Added

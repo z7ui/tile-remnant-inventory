@@ -10,7 +10,7 @@ from ..config import settings
 from ..db import get_db
 from ..deps import ProjectContext, client_ip, get_project_context
 from ..ratelimit import enforce
-from ..schemas import MatchIn, UsageConfirmIn
+from ..schemas import MatchIn, MatchMultiIn, UsageConfirmIn
 from ..services import matching as matching_service
 from ..services import movements as movement_service
 from ..services import trace as trace_service
@@ -32,6 +32,25 @@ def match(
         ctx.project, payload.length, payload.width, payload.quantity, payload.unit
     )
     result = matching_service.match(db, ctx.project, short, long, qty, limit=payload.limit)
+    result["project"] = {"id": ctx.project.id, "min_usable_mm": ctx.project.min_usable_mm}
+    return result
+
+
+@router.post("/match-multi", summary="多尺寸一起匹配（大件优先 + 一块砖混排）")
+def match_multi(
+    payload: MatchMultiIn,
+    request: Request,
+    ctx: ProjectContext = Depends(get_project_context),
+    db: Session = Depends(get_db),
+) -> dict:
+    enforce(client_ip(request), "match")
+    demands: list[tuple[int, int, int]] = []
+    for item in payload.demands:
+        short, long, qty = matching_service.resolve_demand(
+            ctx.project, item.length, item.width, item.quantity, payload.unit
+        )
+        demands.append((short, long, qty))
+    result = matching_service.match_multi(db, ctx.project, demands)
     result["project"] = {"id": ctx.project.id, "min_usable_mm": ctx.project.min_usable_mm}
     return result
 

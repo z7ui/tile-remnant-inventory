@@ -115,6 +115,19 @@ class MatchIn(DemandIn):
     include_exhausted: bool = False
 
 
+class DemandItemIn(StrictModel):
+    length: DimensionValue
+    width: DimensionValue
+    quantity: int = Field(default=1, ge=1, le=2000)
+
+
+class MatchMultiIn(StrictModel):
+    """多尺寸一起匹配：每行一个尺寸 + 数量，服务端按大件优先混排。"""
+
+    unit: Unit | None = None
+    demands: list[DemandItemIn] = Field(min_length=1, max_length=50)
+
+
 class AllocationIn(StrictModel):
     batch_id: str = Field(min_length=8, max_length=40)
     quantity: int = Field(ge=1, le=2000)

@@ -14,6 +14,7 @@ import '../../widgets/common.dart';
 import '../../widgets/dimension_input.dart';
 import '../../widgets/tile_shape_preview.dart';
 import 'confirm_usage_page.dart';
+import 'match_multi_page.dart';
 import '../trace/trace_page.dart';
 
 class MatchPage extends StatefulWidget {
@@ -150,6 +151,15 @@ class _MatchPageState extends State<MatchPage> {
     await _runMatch(silent: true);
   }
 
+  Future<void> _openMulti() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            MatchMultiPage(api: widget.api, onChanged: widget.onChanged),
+      ),
+    );
+  }
+
   Future<void> _openTrace(MatchCandidate candidate) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -166,7 +176,17 @@ class _MatchPageState extends State<MatchPage> {
     final MatchResult? result = _result;
 
     return Scaffold(
-      appBar: buildAppBar(context, '快速匹配'),
+      appBar: buildAppBar(
+        context,
+        '快速匹配',
+        actions: <Widget>[
+          IconButton(
+            onPressed: _openMulti,
+            icon: const Icon(Icons.grid_view_rounded),
+            tooltip: '多尺寸一起匹配',
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
             AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xxl),

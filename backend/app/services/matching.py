@@ -196,3 +196,104 @@ def match(
         "unfulfilled_quantity": max(0, remaining),
         "sorting": "浪费面积 → 余料可再利用价值 → 可用片数 → 录入时间/批次",
     }
+
+
+def match_multi(
+    db: Session,
+    project: Project,
+    demands: list[tuple[int, int, int]],
+    limit_blocks: int = 200,
+) -> dict:
+    """
+    多个尺寸一起匹配：大件优先，一块砖内递归切割（一刀切到底），余料当场给小块用。
+
+    demands: [(短边, 长边, 数量), ...]
+    limit_blocks: 单次最多排多少块砖（防止超大需求把接口拖死）。
+
+    返回每块砖的混排计划，以及「满足 / 缺口 / 利用率」汇总。
+    """
+    from . import nesting
+
+    # 合并同尺寸，并按面积降序（大件优先）
+    merged: dict[tuple[int, int], int] = {}
+    for short, long, qty in demands:
+        key = (short, long) if short <= long else (long, short)
+        merged[key] = merged.get(key, 0) + max(0, qty)
+    remaining: dict[tuple[int, int], int] = {k: v for k, v in merged.items() if v > 0}
+    ordered = sorted(remaining.keys(), key=lambda k: k[0] * k[1], reverse=True)
+
+    batches = load_available_batches(db, project)
+    blocks: list[dict] = []
+    skipped: list[dict] = []
+
+    for batch in batches:
+        if len(blocks) >= limit_blocks:
+            break
+        if not any(v > 0 for v in remaining.values()):
+            break
+
+        _, _, region = geometry.region_from_geometry(batch.geometry)
+        if len(region) != 1:
+            # L 形/复合余料暂不参与混排：切法不唯一，先只做矩形，避免算出切不出来的方案
+            skipped.append(
+                {
+                    "batch_id": batch.id,
+                    "batch_no": batch.batch_no,
+                    "reason": "非矩形余料，暂不参与多尺寸混排",
+                }
+            )
+            continue
+
+        w, h = batch.width_mm, batch.height_mm
+        left = batch.quantity
+        while left > 0 and any(v > 0 for v in remaining.values()):
+            live = [(sw, sl, n) for (sw, sl), n in remaining.items() if n > 0]
+            plan = nesting.fill_block(w, h, live)
+            if not plan.placed:
+                break
+            for (pw, ph), n in plan.placed.items():
+                remaining[(pw, ph)] = max(0, remaining[(pw, ph)] - n)
+            blocks.append(
+                {
+                    "batch_id": batch.id,
+                    "batch_no": batch.batch_no,
+                    "width_mm": w,
+                    "height_mm": h,
+                    "cut_option": "nesting",
+                    "plan": plan.as_dict(),
+                }
+            )
+            left -= 1
+
+    total_pieces = sum(merged.values())
+    missing = sum(remaining.values())
+    used_area = sum(b["plan"]["used_area_mm2"] for b in blocks)
+    stock_area = sum(b["width_mm"] * b["height_mm"] for b in blocks)
+
+    return {
+        "demands": [
+            {
+                "short_mm": short,
+                "long_mm": long,
+                "length_mm": long,
+                "width_mm": short,
+                "quantity": merged[(short, long)],
+                "fulfilled": merged[(short, long)] - remaining.get((short, long), 0),
+                "missing": remaining.get((short, long), 0),
+                "area_mm2": short * long,
+            }
+            for (short, long) in ordered
+        ],
+        "blocks": blocks,
+        "summary": {
+            "blocks_used": len(blocks),
+            "demand_pieces": total_pieces,
+            "fulfilled_pieces": total_pieces - missing,
+            "missing_pieces": missing,
+            "used_area_mm2": used_area,
+            "waste_area_mm2": stock_area - used_area,
+            "utilization": (used_area / stock_area) if stock_area else 0.0,
+        },
+        "skipped": skipped[:10],
+        "sorting": "大件优先（面积降序）→ 每块砖递归切割（一刀切到底）→ 余料当场切小块",
+    }

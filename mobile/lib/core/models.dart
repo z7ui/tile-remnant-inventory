@@ -404,6 +404,160 @@ class MatchResult {
   }
 }
 
+/// 多需求里的一行（一个尺寸 + 数量 + 实际满足情况）。
+class MultiDemandRow {
+  const MultiDemandRow({
+    required this.shortMm,
+    required this.longMm,
+    required this.quantity,
+    required this.fulfilled,
+    required this.missing,
+  });
+
+  final int shortMm;
+  final int longMm;
+  final int quantity;
+  final int fulfilled;
+  final int missing;
+
+  factory MultiDemandRow.fromJson(dynamic json) {
+    final Map<String, dynamic> map = _map(json);
+    return MultiDemandRow(
+      shortMm: _int(map['short_mm']),
+      longMm: _int(map['long_mm']),
+      quantity: _int(map['quantity']),
+      fulfilled: _int(map['fulfilled']),
+      missing: _int(map['missing']),
+    );
+  }
+}
+
+/// 一块砖切出来的某一档尺寸。
+class NestingPiece {
+  const NestingPiece({
+    required this.widthMm,
+    required this.heightMm,
+    required this.quantity,
+    required this.areaMm2,
+  });
+
+  final int widthMm;
+  final int heightMm;
+  final int quantity;
+  final int areaMm2;
+
+  factory NestingPiece.fromJson(dynamic json) {
+    final Map<String, dynamic> map = _map(json);
+    return NestingPiece(
+      widthMm: _int(map['width_mm']),
+      heightMm: _int(map['height_mm']),
+      quantity: _int(map['quantity']),
+      areaMm2: _int(map['area_mm2']),
+    );
+  }
+}
+
+/// 一块砖的混排计划。
+class NestingBlock {
+  const NestingBlock({
+    required this.batchId,
+    required this.batchNo,
+    required this.widthMm,
+    required this.heightMm,
+    required this.pieces,
+    required this.usedAreaMm2,
+    required this.wasteAreaMm2,
+    required this.totalPieces,
+  });
+
+  final String batchId;
+  final int batchNo;
+  final int widthMm;
+  final int heightMm;
+  final List<NestingPiece> pieces;
+  final int usedAreaMm2;
+  final int wasteAreaMm2;
+  final int totalPieces;
+
+  double get utilization =>
+      widthMm * heightMm == 0 ? 0 : usedAreaMm2 / (widthMm * heightMm);
+
+  factory NestingBlock.fromJson(dynamic json) {
+    final Map<String, dynamic> map = _map(json);
+    final Map<String, dynamic> plan = _map(map['plan']);
+    return NestingBlock(
+      batchId: '${map['batch_id'] ?? ''}',
+      batchNo: _int(map['batch_no']),
+      widthMm: _int(map['width_mm']),
+      heightMm: _int(map['height_mm']),
+      pieces: _list(plan['placed'])
+          .map(NestingPiece.fromJson)
+          .toList(growable: false),
+      usedAreaMm2: _int(plan['used_area_mm2']),
+      wasteAreaMm2: _int(plan['waste_area_mm2']),
+      totalPieces: _int(plan['total_pieces']),
+    );
+  }
+}
+
+class MultiMatchSummary {
+  const MultiMatchSummary({
+    required this.blocksUsed,
+    required this.demandPieces,
+    required this.fulfilledPieces,
+    required this.missingPieces,
+    required this.utilization,
+  });
+
+  final int blocksUsed;
+  final int demandPieces;
+  final int fulfilledPieces;
+  final int missingPieces;
+  final double utilization;
+
+  factory MultiMatchSummary.fromJson(dynamic json) {
+    final Map<String, dynamic> map = _map(json);
+    return MultiMatchSummary(
+      blocksUsed: _int(map['blocks_used']),
+      demandPieces: _int(map['demand_pieces']),
+      fulfilledPieces: _int(map['fulfilled_pieces']),
+      missingPieces: _int(map['missing_pieces']),
+      utilization: (map['utilization'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
+/// 多尺寸匹配结果。
+class MultiMatchResult {
+  const MultiMatchResult({
+    required this.demands,
+    required this.blocks,
+    required this.summary,
+    required this.skipped,
+  });
+
+  final List<MultiDemandRow> demands;
+  final List<NestingBlock> blocks;
+  final MultiMatchSummary summary;
+  final List<String> skipped;
+
+  factory MultiMatchResult.fromJson(dynamic json) {
+    final Map<String, dynamic> map = _map(json);
+    return MultiMatchResult(
+      demands: _list(map['demands'])
+          .map(MultiDemandRow.fromJson)
+          .toList(growable: false),
+      blocks: _list(map['blocks'])
+          .map(NestingBlock.fromJson)
+          .toList(growable: false),
+      summary: MultiMatchSummary.fromJson(map['summary']),
+      skipped: _list(map['skipped'])
+          .map((dynamic e) => '${_map(e)['batch_no'] ?? '?'}（${_map(e)['reason'] ?? ''}）')
+          .toList(growable: false),
+    );
+  }
+}
+
 class Movement {
   const Movement({
     required this.id,

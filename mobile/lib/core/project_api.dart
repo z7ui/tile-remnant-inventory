@@ -118,6 +118,19 @@ class ProjectApi {
     return MatchResult.fromJson(json);
   }
 
+  /// 多尺寸一起匹配（大件优先 + 一块砖混排）。
+  Future<MultiMatchResult> matchMulti({
+    required List<Map<String, dynamic>> demands,
+    required String unit,
+  }) async {
+    final dynamic json = await _api.post(
+      '$_base/match-multi',
+      body: <String, dynamic>{'unit': unit, 'demands': demands},
+      projectToken: project.token,
+    );
+    return MultiMatchResult.fromJson(json);
+  }
+
   Future<UsageResult> confirm({
     required String idempotencyKey,
     required String length,
