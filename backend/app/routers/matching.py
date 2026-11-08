@@ -10,7 +10,7 @@ from ..config import settings
 from ..db import get_db
 from ..deps import ProjectContext, client_ip, get_project_context
 from ..ratelimit import enforce
-from ..schemas import MatchIn, MatchMultiIn, UsageConfirmIn
+from ..schemas import MatchIn, MatchMultiIn, MultiConfirmIn, UsageConfirmIn
 from ..services import matching as matching_service
 from ..services import movements as movement_service
 from ..services import trace as trace_service
@@ -64,6 +64,17 @@ def confirm_usage(
 ) -> dict:
     enforce(client_ip(request), "usage.confirm", write=True)
     return usage_service.confirm_usage(db, ctx, payload, ip=client_ip(request))
+
+
+@router.post("/usage/confirm-multi", summary="多尺寸一次确认：一次扣多块并写流水")
+def confirm_usage_multi(
+    payload: MultiConfirmIn,
+    request: Request,
+    ctx: ProjectContext = Depends(get_project_context),
+    db: Session = Depends(get_db),
+) -> dict:
+    enforce(client_ip(request), "usage.confirm", write=True)
+    return usage_service.confirm_multi(db, ctx, payload, ip=client_ip(request))
 
 
 @router.get("/movements", summary="变动流水（筛选 + 分页）")

@@ -135,6 +135,37 @@ class MatchMultiIn(StrictModel):
     demands: list[DemandItemIn] = Field(min_length=1, max_length=50)
 
 
+class NestingPieceIn(StrictModel):
+    """一块砖上切出来的某一档尺寸。"""
+
+    width_mm: int = Field(ge=1, le=20000)
+    height_mm: int = Field(ge=1, le=20000)
+    quantity: int = Field(ge=1, le=2000)
+
+
+class BlockUseIn(StrictModel):
+    """一块砖的产出：切了哪些尺寸、各几片。"""
+
+    batch_id: str = Field(min_length=8, max_length=40)
+    pieces: list[NestingPieceIn] = Field(min_length=1, max_length=20)
+    remnant_action: RemnantAction = "store"
+
+
+class MultiConfirmIn(StrictModel):
+    """多尺寸一次确认：一批砖、每块切了多种尺寸，一次性扣减。"""
+
+    idempotency_key: str = Field(min_length=8, max_length=80)
+    blocks: list[BlockUseIn] = Field(min_length=1, max_length=200)
+    note: str = Field(default="", max_length=500)
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def _key_ok(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("幂等键不能为空")
+        return value
+
+
 class AllocationIn(StrictModel):
     batch_id: str = Field(min_length=8, max_length=40)
     quantity: int = Field(ge=1, le=2000)

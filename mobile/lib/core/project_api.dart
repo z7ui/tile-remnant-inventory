@@ -1,4 +1,5 @@
 import 'api_client.dart';
+import 'formatters.dart';
 import 'models.dart';
 import 'session.dart';
 
@@ -143,6 +144,23 @@ class ProjectApi {
       projectToken: project.token,
     );
     return MultiMatchResult.fromJson(json);
+  }
+
+  /// 多尺寸一次确认：一次扣多块砖，每块可切多种尺寸。
+  Future<Map<String, dynamic>> confirmMulti({
+    required List<Map<String, dynamic>> blocks,
+    String note = '',
+  }) async {
+    final dynamic json = await _api.post(
+      '$_base/usage/confirm-multi',
+      body: <String, dynamic>{
+        'idempotency_key': newIdempotencyKey(),
+        'blocks': blocks,
+        'note': note,
+      },
+      projectToken: project.token,
+    );
+    return Map<String, dynamic>.from(json as Map);
   }
 
   Future<UsageResult> confirm({

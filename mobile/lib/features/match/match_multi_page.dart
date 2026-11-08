@@ -246,6 +246,61 @@ class _MatchMultiPageState extends State<MatchMultiPage> {
     );
   }
 
+  Future<void> _confirmAll(MultiMatchResult result) async {
+    if (result.blocks.isEmpty) return;
+    final bool? ok = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: const Text('确认使用'),
+        content: Text(
+          '将扣掉 ${result.summary.blocksUsed} 块砖，切出 ${result.summary.fulfilledPieces} 片。\n'
+          '扣减后不可撤销。',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('确认扣减'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    final List<Map<String, dynamic>> blocks = result.blocks
+        .map((NestingBlock block) => <String, dynamic>{
+              'batch_id': block.batchId,
+              'pieces': block.pieces
+                  .map((NestingPiece piece) => <String, dynamic>{
+                        'width_mm': piece.widthMm,
+                        'height_mm': piece.heightMm,
+                        'quantity': piece.quantity,
+                      })
+                  .toList(),
+            })
+        .toList();
+
+    setState(() => _loading = true);
+    try {
+      final Map<String, dynamic> response =
+          await widget.api.confirmMulti(blocks: blocks);
+      if (!mounted) return;
+      showSnack(context, '${response['message'] ?? '已确认'}');
+      widget.onChanged();
+      setState(() {
+        _result = null;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      showSnack(context, errorMessage(error), error: true);
+    }
+  }
+
   Widget _buildResult(MultiMatchResult result) {
     final MultiMatchSummary summary = result.summary;
     final bool shortage = summary.missingPieces > 0;
@@ -259,7 +314,7 @@ class _MatchMultiPageState extends State<MatchMultiPage> {
             borderRadius: BorderRadius.circular(AppRadius.control),
           ),
           child: Text(
-            '预览：还没有扣库存。确认使用（一次扣多块 + 余料入库）下一步开放。',
+            '确认前先核对每块砖切出的尺寸；点下方按钮会一次扣掉这些砖。',
             style: TextStyle(
                 fontSize: 12, height: 1.5, color: AppColors.sub(context)),
           ),
@@ -295,6 +350,13 @@ class _MatchMultiPageState extends State<MatchMultiPage> {
             style: TextStyle(fontSize: 12, color: AppColors.sub(context)),
           ),
         ],
+        const SizedBox(height: AppSpacing.md),
+        PrimaryButton(
+          label: '确认使用这 ${result.summary.blocksUsed} 块',
+          icon: Icons.check,
+          loading: _loading,
+          onPressed: () => _confirmAll(result),
+        ),
       ],
     );
   }

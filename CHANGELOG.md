@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.34] - 2026-11-08
+
+### Added
+
+#### 多尺寸匹配
+- 结果页新增「**确认使用这 N 块**」：一次扣掉多块砖，每块按混排结果记账（一块只扣 1 块库存）。
+- 后端 `POST /api/projects/{id}/usage/confirm-multi`：事务内多块扣减 + 每块写一条流水（note 记录切出的全部尺寸）。
+- 容量校验：一块砖上所有片的面积之和超过砖面积会拒绝（409）。
+- 新增 3 个测试（一块只扣一次、超容量拒绝、用完置 depleted）。
+
 ## [0.1.33] - 2026-11-08
 
 ### Added

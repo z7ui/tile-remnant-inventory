@@ -15,7 +15,7 @@ from ..config import settings
 from ..deps import ProjectContext
 from ..errors import ApiError
 from ..models import InventoryBatch, InventoryMovement, Project, UsageRecord
-from ..schemas import AllocationIn, UsageConfirmIn
+from ..schemas import AllocationIn, MultiConfirmIn, UsageConfirmIn
 from ..units import DimensionError, parse_length_mm
 from ..utils import iso, new_id, utcnow
 from . import audit
@@ -495,4 +495,100 @@ def _rebuild_results(
     return results
 
 
-__all__ = ["confirm_usage", "build_usage_response"]
+def confirm_multi(
+    db: Session,
+    ctx: ProjectContext,
+    payload: "MultiConfirmIn",
+    ip: str = "",
+) -> dict:
+    """多尺寸一次确认：一批砖、每块切了多种尺寸，一次性扣减并写流水。
+
+    一块砖只扣 1 块库存；流水里一块砖记一条，note 写明切出的全部尺寸，
+    避免「3 个尺寸记 3 条 -1」把块数重复算掉。
+    """
+    project = ctx.project
+    results: list[dict] = []
+    total_pieces = 0
+
+    for block in payload.blocks:
+        batch = db.execute(
+            select(InventoryBatch)
+            .where(InventoryBatch.id == block.batch_id)
+            .with_for_update()
+        ).scalar_one_or_none()
+        if batch is None or batch.project_id != project.id:
+            raise ApiError(404, "batch_not_found", "选定的余砖批次不存在。")
+        if batch.status != "available" or batch.quantity <= 0:
+            raise ApiError(409, "batch_unavailable", f"批次 #{batch.batch_no:04d} 已不可用。")
+
+        used_area = sum(p.width_mm * p.height_mm * p.quantity for p in block.pieces)
+        if used_area > batch.area_mm2:
+            raise ApiError(
+                409,
+                "over_capacity",
+                f"批次 #{batch.batch_no:04d} 放不下这么多片。",
+            )
+
+        longest = max(max(p.width_mm, p.height_mm) for p in block.pieces)
+        shortest = min(min(p.width_mm, p.height_mm) for p in block.pieces)
+        desc = "、".join(f"{p.width_mm}×{p.height_mm}×{p.quantity}" for p in block.pieces)
+
+        before = batch.quantity
+        after = before - 1
+        batch.quantity = after
+        batch.version += 1
+        batch.updated_at = utcnow()
+        if after == 0:
+            batch.status = "depleted"
+
+        db.add(
+            InventoryMovement(
+                id=new_id(),
+                project_id=project.id,
+                batch_id=batch.id,
+                batch_no=batch.batch_no,
+                root_batch_id=batch.root_batch_id,
+                type="usage",
+                quantity_delta=-1,
+                quantity_before=before,
+                quantity_after=after,
+                width_before_mm=batch.width_mm,
+                height_before_mm=batch.height_mm,
+                width_after_mm=batch.width_mm,
+                height_after_mm=batch.height_mm,
+                area_before_mm2=batch.area_mm2,
+                area_after_mm2=batch.area_mm2,
+                used_length_mm=longest,
+                used_width_mm=shortest,
+                device_id=ctx.device.id,
+                note=f"多尺寸混排：{desc}" + (f"（{payload.note}）" if payload.note else ""),
+            )
+        )
+        total_pieces += sum(p.quantity for p in block.pieces)
+        results.append(
+            {
+                "batch_id": batch.id,
+                "batch_no": batch.batch_no,
+                "quantity_after": after,
+            }
+        )
+
+    audit.log(
+        db,
+        "usage.confirm_multi",
+        project_id=project.id,
+        device_id=ctx.device.id,
+        target_type="project",
+        target_id=project.id,
+        detail={"blocks": len(results), "pieces": total_pieces},
+        ip=ip,
+    )
+    db.commit()
+    return {
+        "blocks": results,
+        "total_pieces": total_pieces,
+        "message": f"已扣 {len(results)} 块砖，切出 {total_pieces} 片",
+    }
+
+
+__all__ = ["confirm_usage", "confirm_multi", "build_usage_response"]
