@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/); versioning follows [SemVer](https://semver.org/lang/zh-CN/).
 
+## [0.1.35] - 2026-11-08
+
+### Fixed
+
+#### 库存卡片
+- 「调整 / 用掉 / 溯源」三个操作改成**图标 + 文字 + 浅底胶囊**，颜色区分：
+  用掉 = 蓝（主操作），调整 / 溯源 = 灰。之前三个都是灰字，分不清也点不准。
+
 ## [0.1.34] - 2026-11-08
 
 ### Added

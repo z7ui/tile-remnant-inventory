@@ -171,37 +171,82 @@ class StockCard extends StatelessWidget {
                       ),
                     const Spacer(),
                     if (onAdjust != null)
-                      TextButton(
-                        onPressed: onAdjust,
-                        style: TextButton.styleFrom(
-                          minimumSize: const Size(0, AppSizes.minTouch),
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                        ),
-                        child: const Text('调整'),
+                      _ActionChip(
+                        icon: Icons.tune,
+                        label: '调整',
+                        color: AppColors.sub(context),
+                        onTap: onAdjust,
                       ),
-                    if (onConsume != null)
-                      TextButton.icon(
-                        onPressed: onConsume,
-                        icon: const Icon(Icons.remove_circle_outline, size: 17),
-                        label: const Text('用掉'),
-                        style: TextButton.styleFrom(
-                          minimumSize: const Size(0, AppSizes.minTouch),
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                        ),
+                    if (onConsume != null) ...<Widget>[
+                      const SizedBox(width: 6),
+                      _ActionChip(
+                        icon: Icons.remove_circle_outline,
+                        label: '用掉',
+                        color: AppColors.primary,
+                        onTap: onConsume,
                       ),
-                    TextButton.icon(
-                      onPressed: onTrace,
-                      icon: const Icon(Icons.account_tree_outlined, size: 17),
-                      label: const Text('溯源'),
-                      style: TextButton.styleFrom(
-                        minimumSize: const Size(0, AppSizes.minTouch),
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                      ),
+                    ],
+                    const SizedBox(width: 6),
+                    _ActionChip(
+                      icon: Icons.account_tree_outlined,
+                      label: '溯源',
+                      color: AppColors.sub(context),
+                      onTap: onTrace,
                     ),
                   ],
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 卡片底部的小操作按钮：图标 + 文字 + 浅底，用颜色区分用途。
+class _ActionChip extends StatelessWidget {
+  const _ActionChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: 0.22)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(icon, size: 15, color: color),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  height: 1,
+                  fontWeight: FontWeight.w500,
+                  color: color,
+                ),
+              ),
+            ],
           ),
         ),
       ),
