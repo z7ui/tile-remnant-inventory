@@ -21,10 +21,10 @@
 
 支持一个参照对多个目标（家里 vs 厂里好几个样品），每个目标独立算 ΔE，可导出一张对比长图。
 
-- 版本 0.1.0
+- 版本 0.1.1
 - 文章：[装修选色，先解决「光」的问题](https://www.z7ui.cn/color-match/)
 - 源码：[github.com/z7ui/color-match](https://github.com/z7ui/color-match)
-- 下载：[color-match-0.1.0.apk](https://www.z7ui.cn/tile-api/apk/color-match/color-match-0.1.0.apk)
+- 下载：[color-match-0.1.1.apk](https://www.z7ui.cn/tile-api/apk/color-match/color-match-0.1.1.apk)
 
 ## 清抖 · 给抖音界面做减法
 
