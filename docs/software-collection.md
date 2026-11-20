@@ -24,7 +24,7 @@
 - 版本 0.1.0
 - 文章：[装修选色，先解决「光」的问题](https://www.z7ui.cn/color-match/)
 - 源码：[github.com/z7ui/color-match](https://github.com/z7ui/color-match)
-- 下载：暂未发布（debug 包在本地）
+- 下载：[color-match-0.1.0.apk](https://www.z7ui.cn/tile-api/apk/color-match/color-match-0.1.0.apk)
 
 ## 清抖 · 给抖音界面做减法
 
