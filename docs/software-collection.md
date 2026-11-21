@@ -10,7 +10,7 @@
 
 界面按工地场景做：大按钮、数字键盘、离线可用、扫码加入项目。
 
-- 版本 0.1.57
+- 版本 0.1.67
 - 文章：[工地上的半块砖，终于有地方放了](https://www.z7ui.cn/tile-remnant-inventory/)
 - 源码：[github.com/z7ui/tile-remnant-inventory](https://github.com/z7ui/tile-remnant-inventory)
 - 下载：[tile-remnant-0.1.37.apk](https://www.z7ui.cn/d/tile-remnant-0.1.37)
@@ -21,10 +21,10 @@
 
 支持一个参照对多个目标（家里 vs 厂里好几个样品），每个目标独立算 ΔE，可导出一张对比长图。
 
-- 版本 0.1.5
+- 版本 0.1.6
 - 文章：[装修选色，先解决「光」的问题](https://www.z7ui.cn/color-match/)
 - 源码：[github.com/z7ui/color-match](https://github.com/z7ui/color-match)
-- 下载：[color-match-0.1.5.apk](https://www.z7ui.cn/tile-api/apk/color-match/color-match-0.1.5.apk)
+- 下载：[color-match-0.1.6.apk](https://www.z7ui.cn/tile-api/apk/color-match/color-match-0.1.6.apk)
 
 ## 清抖 · 给抖音界面做减法
 
